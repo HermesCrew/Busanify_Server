@@ -6,44 +6,125 @@ export class PlaceEntity extends BaseEntity {
   id: number;
 
   @Column()
-  titleEng: string;
-
-  @Column()
-  titleJpn: string;
-
-  @Column()
-  titleChs: string;
-
-  @Column()
-  titleCht: string;
-
-  @Column()
   type: string;
 
-  @Column()
+  @Column({ type: 'text' })
+  titleEng: string;
+
+  @Column({ type: 'text' })
+  titleJpn: string;
+
+  @Column({ type: 'text' })
+  titleChs: string;
+
+  @Column({ type: 'text' })
+  titleCht: string;
+
+  @Column({ type: 'text' })
   addressEng: string;
 
-  @Column()
+  @Column({ type: 'text' })
   addressJpn: string;
 
-  @Column()
+  @Column({ type: 'text' })
   addressChs: string;
 
-  @Column()
+  @Column({ type: 'text' })
   addressCht: string;
 
   @Column()
-  firstImage: string;
+  image: string;
 
-  @Column()
-  secondImage: string;
-
-  @Column()
+  @Column({ type: 'double' })
   latitude: number;
 
-  @Column()
+  @Column({ type: 'double' })
   longitude: number;
 
   @Column()
-  zipcode: string;
+  tel: string;
+
+  @Column()
+  openTimeEng: string;
+
+  @Column()
+  openTimeJpn: string;
+
+  @Column()
+  openTimeChs: string;
+
+  @Column()
+  openTimeCht: string;
+
+  @Column({ type: 'text', nullable: true })
+  parkingEng: string;
+
+  @Column({ type: 'text', nullable: true })
+  parkingJpn: string;
+
+  @Column({ type: 'text', nullable: true })
+  parkingChs: string;
+
+  @Column({ type: 'text', nullable: true })
+  parkingCht: string;
+
+  @Column({ nullable: true })
+  holidayEng: string;
+
+  @Column({ nullable: true })
+  holidayJpn: string;
+
+  @Column({ nullable: true })
+  holidayChs: string;
+
+  @Column({ nullable: true })
+  holidayCht: string;
+
+  @Column({ nullable: true })
+  feeEng: string;
+
+  @Column({ nullable: true })
+  feeJpn: string;
+
+  @Column({ nullable: true })
+  feeChs: string;
+
+  @Column({ nullable: true })
+  feeCht: string;
+
+  @Column({ nullable: true })
+  menuEng: string;
+
+  @Column({ nullable: true })
+  menuJpn: string;
+
+  @Column({ nullable: true })
+  menuChs: string;
+
+  @Column({ nullable: true })
+  menuCht: string;
+
+  @Column({ type: 'text', nullable: true })
+  shopguideEng: string;
+
+  @Column({ type: 'text', nullable: true })
+  shopguideJpn: string;
+
+  @Column({ type: 'text', nullable: true })
+  shopguideChs: string;
+
+  @Column({ type: 'text', nullable: true })
+  shopguideCht: string;
+
+  @Column({ nullable: true })
+  reservationURL: string;
+
+  @Column({ nullable: true })
+  goodStay: boolean;
+
+  @Column({ nullable: true })
+  hanok: boolean;
+
+  @Column({ nullable: true })
+  restroom: boolean;
 }

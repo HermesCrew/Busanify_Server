@@ -11,6 +11,7 @@ export class OpenAPIService {
     private placeRepository: Repository<PlaceEntity>,
   ) {}
 
+  // 한국관광공사 관리 데이터
   async fetchTotalCount(apiUrl: string): Promise<number> {
     try {
       const response = await axios.get(apiUrl);
@@ -31,6 +32,7 @@ export class OpenAPIService {
       const data = response.data;
       return data.response.body.items.item;
     } catch (error) {
+      console.log(apiUrl);
       console.log(error.message);
       throw new HttpException(
         'Failed to fetch data from OpenAPI',
@@ -39,12 +41,113 @@ export class OpenAPIService {
     }
   }
 
+  // AttractionData 데이터
+  async fetchAttractionTotalCount(
+    lang: string,
+    apiUrl: string,
+  ): Promise<number> {
+    try {
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+
+      switch (lang) {
+        case 'eng':
+          return data.getAttractionEn.totalCount;
+        case 'jpn':
+          return data.getAttractionJa.totalCount;
+        case 'chs':
+          return data.getAttractionZhs.totalCount;
+        case 'cht':
+          return data.getAttractionZht.totalCount;
+      }
+    } catch (error) {
+      console.log(error.message);
+      throw new HttpException(
+        'Failed to fetch total count from OpenAPI',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async fetchAttractionData(lang: string, apiUrl: string): Promise<any[]> {
+    try {
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+
+      switch (lang) {
+        case 'eng':
+          return data.getAttractionEn.item;
+        case 'jpn':
+          return data.getAttractionJa.item;
+        case 'chs':
+          return data.getAttractionZhs.item;
+        case 'cht':
+          return data.getAttractionZht.item;
+      }
+    } catch (error) {
+      console.log(error.message);
+      throw new HttpException(
+        'Failed to fetch data from OpenAPI',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // AttractionData 데이터
+  async fetchFoodTotalCount(lang: string, apiUrl: string): Promise<number> {
+    try {
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+
+      switch (lang) {
+        case 'eng':
+          return data.getFoodEn.totalCount;
+        case 'jpn':
+          return data.getFoodJa.totalCount;
+        case 'chs':
+          return data.getFoodZhs.totalCount;
+        case 'cht':
+          return data.getFoodZht.totalCount;
+      }
+    } catch (error) {
+      console.log(error.message);
+      throw new HttpException(
+        'Failed to fetch total count from OpenAPI',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async fetchFoodData(lang: string, apiUrl: string): Promise<any[]> {
+    try {
+      const response = await axios.get(apiUrl);
+      const data = response.data;
+
+      switch (lang) {
+        case 'eng':
+          return data.getFoodEn.item;
+        case 'jpn':
+          return data.getFoodJa.item;
+        case 'chs':
+          return data.getFoodZhs.item;
+        case 'cht':
+          return data.getFoodZht.item;
+      }
+    } catch (error) {
+      console.log(error.message);
+      throw new HttpException(
+        'Failed to fetch data from OpenAPI',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  serviceKey = '';
   async saveFetchData() {
-    const serviceKey = '';
-    const baseUrlEng = `https://apis.data.go.kr/B551011/EngService1/areaBasedList1?&MobileOS=IOS&MobileApp=app&_type=JSON&areaCode=6&serviceKey=${serviceKey}`;
-    const baseUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${serviceKey}`;
-    const baseUrlChs = `https://apis.data.go.kr/B551011/ChsService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${serviceKey}`;
-    const baseUrlCht = `https://apis.data.go.kr/B551011/ChtService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${serviceKey}`;
+    const baseUrlEng = `https://apis.data.go.kr/B551011/EngService1/areaBasedList1?&MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlChs = `https://apis.data.go.kr/B551011/ChsService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlCht = `https://apis.data.go.kr/B551011/ChtService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
 
     const totalCountEng = await this.fetchTotalCount(baseUrlEng);
     const totalCountJpn = await this.fetchTotalCount(baseUrlJpn);
@@ -76,25 +179,325 @@ export class OpenAPIService {
     dataCht = this.getIntersection(dataCht, dataIntersection);
 
     for (let i = 0; i < dataEng.length; i++) {
+      const detailUrlEng = `https://apis.data.go.kr/B551011/EngService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataEng[i].contentid}&contentTypeId=${dataEng[i].contenttypeid}&serviceKey=${this.serviceKey}`;
+      const detailUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataJpn[i].contentid}&contentTypeId=${dataJpn[i].contenttypeid}&serviceKey=${this.serviceKey}`;
+      const detailUrlChs = `https://apis.data.go.kr/B551011/ChsService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataChs[i].contentid}&contentTypeId=${dataChs[i].contenttypeid}&serviceKey=${this.serviceKey}`;
+      const detailUrlCht = `https://apis.data.go.kr/B551011/ChtService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataCht[i].contentid}&contentTypeId=${dataCht[i].contenttypeid}&serviceKey=${this.serviceKey}`;
+
+      let detailDataEng = await this.fetchData(detailUrlEng);
+      let detailDataJpn = await this.fetchData(detailUrlJpn);
+      let detailDataChs = await this.fetchData(detailUrlChs);
+      let detailDataCht = await this.fetchData(detailUrlCht);
+
+      switch (dataEng[i].contenttypeid) {
+        // 쇼핑
+        case '79':
+          const additionalFields79 = {
+            openTimeEng: detailDataEng[0].opentime ?? '',
+            openTimeJpn: detailDataJpn[0].opentime ?? '',
+            openTimeChs: detailDataChs[0].opentime ?? '',
+            openTimeCht: detailDataCht[0].opentime ?? '',
+
+            holidayEng: detailDataEng[0].restdateshopping,
+            holidayJpn: detailDataJpn[0].restdateshopping,
+            holidayChs: detailDataChs[0].restdateshopping,
+            holidayCht: detailDataCht[0].restdateshopping,
+
+            parkingEng: detailDataEng[0].parkingshopping,
+            parkingJpn: detailDataJpn[0].parkingshopping,
+            parkingChs: detailDataChs[0].parkingshopping,
+            parkingCht: detailDataCht[0].parkingshopping,
+
+            restroom: detailDataEng[0].restroom.includes('Available'),
+
+            shopguideEng: detailDataEng[0].shopguide,
+            shopguideJpn: detailDataJpn[0].shopguide,
+            shopguideChs: detailDataChs[0].shopguide,
+            shopguideCht: detailDataCht[0].shopguide,
+          };
+          const place79 = this.createPlace(
+            dataEng[i],
+            dataJpn[i],
+            dataChs[i],
+            dataCht[i],
+            additionalFields79,
+          );
+          await this.placeRepository.save(place79);
+          break;
+        case '80':
+          const additionalFields80 = {
+            openTimeEng: detailDataEng[0].opentime ?? '',
+            openTimeJpn: detailDataJpn[0].opentime ?? '',
+            openTimeChs: detailDataChs[0].opentime ?? '',
+            openTimeCht: detailDataCht[0].opentime ?? '',
+
+            parkingEng: detailDataEng[0].parkingshopping,
+            parkingJpn: detailDataJpn[0].parkingshopping,
+            parkingChs: detailDataChs[0].parkingshopping,
+            parkingCht: detailDataCht[0].parkingshopping,
+
+            reservationURL: detailDataEng[0].reservationurl,
+            goodStay: detailDataEng[0].goodstay === '0' ? false : true,
+            hanok: detailDataEng[0].hanok === '0' ? false : true,
+          };
+          const place80 = this.createPlace(
+            dataEng[i],
+            dataJpn[i],
+            dataChs[i],
+            dataCht[i],
+            additionalFields80,
+          );
+          await this.placeRepository.save(place80);
+          break;
+        // 관광지
+        // case '76':
+        //   const additionalFields76 = {
+        //     openTime: detailData[0].usetime,
+        //     restDate: detailData[0].restdate,
+        //     parking: detailData[0].parking,
+        //   };
+        //   const place76 = this.createPlace(
+        //     dataEng[i],
+        //     dataJpn[i],
+        //     dataChs[i],
+        //     dataCht[i],
+        //     additionalFields76,
+        //   );
+        //   await this.placeRepository.save(place76);
+        //   break;
+        // 음식점
+        // case '82':
+        //   const additionalFields82 = {
+        //     openTime: detailData[0].opentimefood,
+        //     restDate: detailData[0].restdatefood,
+        //     parking: detailData[0].parkingfood,
+        //     menu: detailData[0].firstmenu,
+        //   };
+        //   const place82 = this.createPlace(
+        //     dataEng[i],
+        //     dataJpn[i],
+        //     dataChs[i],
+        //     dataCht[i],
+        //     additionalFields82,
+        //   );
+        //   await this.placeRepository.save(place82);
+        //   break;
+        default:
+          break;
+      }
+    }
+    console.log('데이터 저장 완료');
+  }
+
+  delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // 관광지 저장
+  async saveAttractionService() {
+    const baseUrlEng = `https://apis.data.go.kr/6260000/AttractionService/getAttractionEn?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlJpn = `https://apis.data.go.kr/6260000/AttractionService/getAttractionJa?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlChs = `https://apis.data.go.kr/6260000/AttractionService/getAttractionZhs?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlCht = `https://apis.data.go.kr/6260000/AttractionService/getAttractionZht?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+
+    const totalCountEng = await this.fetchAttractionTotalCount(
+      'eng',
+      baseUrlEng,
+    );
+    const totalCountJpn = await this.fetchAttractionTotalCount(
+      'jpn',
+      baseUrlJpn,
+    );
+    const totalCountChs = await this.fetchAttractionTotalCount(
+      'chs',
+      baseUrlChs,
+    );
+    const totalCountCht = await this.fetchAttractionTotalCount(
+      'cht',
+      baseUrlCht,
+    );
+
+    const apiUrlEng = `${baseUrlEng}&numOfRows=${totalCountEng}`;
+    const apiUrlJpn = `${baseUrlJpn}&numOfRows=${totalCountJpn}`;
+    const apiUrlChs = `${baseUrlChs}&numOfRows=${totalCountChs}`;
+    const apiUrlCht = `${baseUrlCht}&numOfRows=${totalCountCht}`;
+
+    let dataEng = await this.fetchAttractionData('eng', apiUrlEng);
+    let dataJpn = await this.fetchAttractionData('jpn', apiUrlJpn);
+    let dataChs = await this.fetchAttractionData('chs', apiUrlChs);
+    let dataCht = await this.fetchAttractionData('cht', apiUrlCht);
+
+    dataEng = dataEng.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataJpn = dataJpn.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataChs = dataChs.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataCht = dataCht.filter((data) => data.MAIN_IMG_NORMAL !== '');
+
+    let dataIntersection = this.getIntersectionAttractionService(
+      dataEng,
+      dataJpn,
+    );
+    dataIntersection = this.getIntersectionAttractionService(
+      dataIntersection,
+      dataChs,
+    );
+    dataIntersection = this.getIntersectionAttractionService(
+      dataIntersection,
+      dataCht,
+    );
+
+    dataEng = this.getIntersectionAttractionService(dataEng, dataIntersection);
+    dataJpn = this.getIntersectionAttractionService(dataJpn, dataIntersection);
+    dataChs = this.getIntersectionAttractionService(dataChs, dataIntersection);
+    dataCht = this.getIntersectionAttractionService(dataCht, dataIntersection);
+
+    for (let i = 0; i < dataEng.length; i++) {
       const place = this.placeRepository.create({
-        titleEng: dataEng[i].title,
-        titleJpn: dataJpn[i].title,
-        titleChs: dataChs[i].title,
-        titleCht: dataCht[i].title,
-        type: dataEng[i].contenttypeid,
-        addressEng: dataEng[i].addr1,
-        addressJpn: dataJpn[i].addr1,
-        addressChs: dataChs[i].addr1,
-        addressCht: dataCht[i].addr1,
-        firstImage: dataEng[i].firstimage,
-        secondImage: dataEng[i].firstimage2,
-        latitude: Number(dataEng[i].mapy),
-        longitude: Number(dataEng[i].mapx),
-        zipcode: dataEng[i].zipcode,
+        titleEng: dataEng[i].PLACE,
+        titleJpn: dataJpn[i].PLACE,
+        titleChs: dataChs[i].PLACE,
+        titleCht: dataCht[i].PLACE,
+        type: '76',
+        addressEng: dataEng[i].ADDR1,
+        addressJpn: dataJpn[i].ADDR1,
+        addressChs: dataChs[i].ADDR1,
+        addressCht: dataCht[i].ADDR1,
+        image: dataEng[i].MAIN_IMG_NORMAL,
+        latitude: Number(dataEng[i].LAT),
+        longitude: Number(dataEng[i].LNG),
+        tel: dataEng[i].CNTCT_TEL,
+        openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeChs: dataChs[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeCht: dataCht[i].USAGE_DAY_WEEK_AND_TIME,
+        parkingEng: dataEng[i].TRFC_INFO.includes(':')
+          ? dataEng[i].TRFC_INFO.slice(
+              dataEng[i].TRFC_INFO.indexOf(':') + 1,
+            ).trim()
+          : '',
+        parkingJpn: dataJpn[i].TRFC_INFO.includes('駐車：')
+          ? dataJpn[i].TRFC_INFO.slice(
+              dataJpn[i].TRFC_INFO.indexOf('駐車：') + '駐車：'.length,
+            ).trim()
+          : '',
+        parkingChs: dataChs[i].TRFC_INFO.includes('停车 ')
+          ? dataChs[i].TRFC_INFO.slice(
+              dataChs[i].TRFC_INFO.indexOf('停车 ') + '停车 '.length,
+            ).trim()
+          : '',
+        parkingCht: dataCht[i].TRFC_INFO.includes('停車 ')
+          ? dataCht[i].TRFC_INFO.slice(
+              dataCht[i].TRFC_INFO.indexOf('停車 ') + '停車 '.length,
+            ).trim()
+          : '',
+        holidayEng: dataEng[i].HLDY_INFO,
+        holidayJpn: dataJpn[i].HLDY_INFO,
+        holidayChs: dataChs[i].HLDY_INFO,
+        holidayCht: dataCht[i].HLDY_INFO,
+        feeEng: dataEng[i].USAGE_AMOUNT,
+        feeJpn: dataJpn[i].USAGE_AMOUNT,
+        feeChs: dataChs[i].USAGE_AMOUNT,
+        feeCht: dataCht[i].USAGE_AMOUNT,
       });
 
       await this.placeRepository.save(place);
     }
+  }
+
+  // 음식점 저장
+  async saveFoodService() {
+    const baseUrlEng = `https://apis.data.go.kr/6260000/FoodService/getFoodEn?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlJpn = `https://apis.data.go.kr/6260000/FoodService/getFoodJa?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlChs = `https://apis.data.go.kr/6260000/FoodService/getFoodZhs?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+    const baseUrlCht = `https://apis.data.go.kr/6260000/FoodService/getFoodZht?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
+
+    const totalCountEng = await this.fetchFoodTotalCount('eng', baseUrlEng);
+    const totalCountJpn = await this.fetchFoodTotalCount('jpn', baseUrlJpn);
+    const totalCountChs = await this.fetchFoodTotalCount('chs', baseUrlChs);
+    const totalCountCht = await this.fetchFoodTotalCount('cht', baseUrlCht);
+
+    const apiUrlEng = `${baseUrlEng}&numOfRows=${totalCountEng}`;
+    const apiUrlJpn = `${baseUrlJpn}&numOfRows=${totalCountJpn}`;
+    const apiUrlChs = `${baseUrlChs}&numOfRows=${totalCountChs}`;
+    const apiUrlCht = `${baseUrlCht}&numOfRows=${totalCountCht}`;
+
+    let dataEng = await this.fetchFoodData('eng', apiUrlEng);
+    let dataJpn = await this.fetchFoodData('jpn', apiUrlJpn);
+    let dataChs = await this.fetchFoodData('chs', apiUrlChs);
+    let dataCht = await this.fetchFoodData('cht', apiUrlCht);
+
+    dataEng = dataEng.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataJpn = dataJpn.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataChs = dataChs.filter((data) => data.MAIN_IMG_NORMAL !== '');
+    dataCht = dataCht.filter((data) => data.MAIN_IMG_NORMAL !== '');
+
+    let dataIntersection = this.getIntersectionAttractionService(
+      dataEng,
+      dataJpn,
+    );
+    dataIntersection = this.getIntersectionAttractionService(
+      dataIntersection,
+      dataChs,
+    );
+    dataIntersection = this.getIntersectionAttractionService(
+      dataIntersection,
+      dataCht,
+    );
+
+    dataEng = this.getIntersectionAttractionService(dataEng, dataIntersection);
+    dataJpn = this.getIntersectionAttractionService(dataJpn, dataIntersection);
+    dataChs = this.getIntersectionAttractionService(dataChs, dataIntersection);
+    dataCht = this.getIntersectionAttractionService(dataCht, dataIntersection);
+
+    for (let i = 0; i < dataEng.length; i++) {
+      const place = this.placeRepository.create({
+        titleEng: dataEng[i].TITLE,
+        titleJpn: dataJpn[i].TITLE,
+        titleChs: dataChs[i].TITLE,
+        titleCht: dataCht[i].TITLE,
+        type: '82',
+        addressEng: dataEng[i].ADDR1,
+        addressJpn: dataJpn[i].ADDR1,
+        addressChs: dataChs[i].ADDR1,
+        addressCht: dataCht[i].ADDR1,
+        image: dataEng[i].MAIN_IMG_NORMAL,
+        latitude: Number(dataEng[i].LAT),
+        longitude: Number(dataEng[i].LNG),
+        tel: dataEng[i].CNTCT_TEL,
+        openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeChs: dataChs[i].USAGE_DAY_WEEK_AND_TIME,
+        openTimeCht: dataCht[i].USAGE_DAY_WEEK_AND_TIME,
+        holidayEng: dataEng[i].HLDY_INFO,
+        holidayJpn: dataJpn[i].HLDY_INFO,
+        holidayChs: dataChs[i].HLDY_INFO,
+        holidayCht: dataCht[i].HLDY_INFO,
+        menuEng: dataEng[i].RPRSNTV_MENU,
+        menuJpn: dataJpn[i].RPRSNTV_MENU,
+        menuChs: dataChs[i].RPRSNTV_MENU,
+        menuCht: dataCht[i].RPRSNTV_MENU,
+      });
+
+      await this.placeRepository.save(place);
+    }
+  }
+
+  createPlace(dataEng, dataJpn, dataChs, dataCht, additionalFields = {}) {
+    return this.placeRepository.create({
+      titleEng: dataEng.title,
+      titleJpn: dataJpn.title,
+      titleChs: dataChs.title,
+      titleCht: dataCht.title,
+      type: dataEng.contenttypeid,
+      addressEng: dataEng.addr1,
+      addressJpn: dataJpn.addr1,
+      addressChs: dataChs.addr1,
+      addressCht: dataCht.addr1,
+      image: dataEng.firstimage,
+      latitude: Number(dataEng.mapy),
+      longitude: Number(dataEng.mapx),
+      tel: dataEng.tel,
+      ...additionalFields,
+    });
   }
 
   getIntersection(firstArr, secondArr) {
@@ -106,6 +509,26 @@ export class OpenAPIService {
 
     filteredArr.sort((a, b) =>
       a.firstimage < b.firstimage ? -1 : a.firstimage > b.firstimage ? 1 : 0,
+    );
+
+    return filteredArr;
+  }
+
+  getIntersectionAttractionService(firstArr, secondArr) {
+    const secondArrToSet = new Set(
+      secondArr.map((item) => item.MAIN_IMG_NORMAL),
+    );
+
+    const filteredArr = firstArr.filter((item) =>
+      secondArrToSet.has(item.MAIN_IMG_NORMAL),
+    );
+
+    filteredArr.sort((a, b) =>
+      a.MAIN_IMG_NORMAL < b.MAIN_IMG_NORMAL
+        ? -1
+        : a.MAIN_IMG_NORMAL > b.MAIN_IMG_NORMAL
+          ? 1
+          : 0,
     );
 
     return filteredArr;
