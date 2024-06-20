@@ -1,17 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
-import { PlaceEntity } from 'src/entity/place.entity';
+import { PlaceEntity } from 'src/entities/place.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class OpenAPIService {
+  serviceKey = process.env.SERVICE_KEY;
+
   constructor(
     @InjectRepository(PlaceEntity)
     private placeRepository: Repository<PlaceEntity>,
   ) {}
 
-  // 한국관광공사 관리 데이터
   async fetchTotalCount(apiUrl: string): Promise<number> {
     try {
       const response = await axios.get(apiUrl);
@@ -41,7 +42,6 @@ export class OpenAPIService {
     }
   }
 
-  // AttractionData 데이터
   async fetchAttractionTotalCount(
     lang: string,
     apiUrl: string,
@@ -93,7 +93,6 @@ export class OpenAPIService {
     }
   }
 
-  // AttractionData 데이터
   async fetchFoodTotalCount(lang: string, apiUrl: string): Promise<number> {
     try {
       const response = await axios.get(apiUrl);
@@ -142,12 +141,11 @@ export class OpenAPIService {
     }
   }
 
-  serviceKey = '';
-  async saveFetchData() {
-    const baseUrlEng = `https://apis.data.go.kr/B551011/EngService1/areaBasedList1?&MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
-    const baseUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
-    const baseUrlChs = `https://apis.data.go.kr/B551011/ChsService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
-    const baseUrlCht = `https://apis.data.go.kr/B551011/ChtService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&areaCode=6&serviceKey=${this.serviceKey}`;
+  async saveFetchData(typeId: string) {
+    const baseUrlEng = `https://apis.data.go.kr/B551011/EngService1/areaBasedList1?&MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlChs = `https://apis.data.go.kr/B551011/ChsService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
+    const baseUrlCht = `https://apis.data.go.kr/B551011/ChtService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
 
     const totalCountEng = await this.fetchTotalCount(baseUrlEng);
     const totalCountJpn = await this.fetchTotalCount(baseUrlJpn);
@@ -179,17 +177,17 @@ export class OpenAPIService {
     dataCht = this.getIntersection(dataCht, dataIntersection);
 
     for (let i = 0; i < dataEng.length; i++) {
-      const detailUrlEng = `https://apis.data.go.kr/B551011/EngService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataEng[i].contentid}&contentTypeId=${dataEng[i].contenttypeid}&serviceKey=${this.serviceKey}`;
-      const detailUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataJpn[i].contentid}&contentTypeId=${dataJpn[i].contenttypeid}&serviceKey=${this.serviceKey}`;
-      const detailUrlChs = `https://apis.data.go.kr/B551011/ChsService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataChs[i].contentid}&contentTypeId=${dataChs[i].contenttypeid}&serviceKey=${this.serviceKey}`;
-      const detailUrlCht = `https://apis.data.go.kr/B551011/ChtService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataCht[i].contentid}&contentTypeId=${dataCht[i].contenttypeid}&serviceKey=${this.serviceKey}`;
+      const detailUrlEng = `https://apis.data.go.kr/B551011/EngService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataEng[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
+      const detailUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataJpn[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
+      const detailUrlChs = `https://apis.data.go.kr/B551011/ChsService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataChs[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
+      const detailUrlCht = `https://apis.data.go.kr/B551011/ChtService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataCht[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
 
       let detailDataEng = await this.fetchData(detailUrlEng);
       let detailDataJpn = await this.fetchData(detailUrlJpn);
       let detailDataChs = await this.fetchData(detailUrlChs);
       let detailDataCht = await this.fetchData(detailUrlCht);
 
-      switch (dataEng[i].contenttypeid) {
+      switch (typeId) {
         // 쇼핑
         case '79':
           const additionalFields79 = {
@@ -224,6 +222,7 @@ export class OpenAPIService {
           );
           await this.placeRepository.save(place79);
           break;
+        // 숙박
         case '80':
           const additionalFields80 = {
             openTimeEng: detailDataEng[0].opentime ?? '',
@@ -249,48 +248,10 @@ export class OpenAPIService {
           );
           await this.placeRepository.save(place80);
           break;
-        // 관광지
-        // case '76':
-        //   const additionalFields76 = {
-        //     openTime: detailData[0].usetime,
-        //     restDate: detailData[0].restdate,
-        //     parking: detailData[0].parking,
-        //   };
-        //   const place76 = this.createPlace(
-        //     dataEng[i],
-        //     dataJpn[i],
-        //     dataChs[i],
-        //     dataCht[i],
-        //     additionalFields76,
-        //   );
-        //   await this.placeRepository.save(place76);
-        //   break;
-        // 음식점
-        // case '82':
-        //   const additionalFields82 = {
-        //     openTime: detailData[0].opentimefood,
-        //     restDate: detailData[0].restdatefood,
-        //     parking: detailData[0].parkingfood,
-        //     menu: detailData[0].firstmenu,
-        //   };
-        //   const place82 = this.createPlace(
-        //     dataEng[i],
-        //     dataJpn[i],
-        //     dataChs[i],
-        //     dataCht[i],
-        //     additionalFields82,
-        //   );
-        //   await this.placeRepository.save(place82);
-        //   break;
-        default:
-          break;
       }
     }
-    console.log('데이터 저장 완료');
-  }
 
-  delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    console.log('데이터 저장 완료');
   }
 
   // 관광지 저장
@@ -356,14 +317,14 @@ export class OpenAPIService {
         titleJpn: dataJpn[i].PLACE,
         titleChs: dataChs[i].PLACE,
         titleCht: dataCht[i].PLACE,
-        type: '76',
+        typeId: '76',
         addressEng: dataEng[i].ADDR1,
         addressJpn: dataJpn[i].ADDR1,
         addressChs: dataChs[i].ADDR1,
         addressCht: dataCht[i].ADDR1,
         image: dataEng[i].MAIN_IMG_NORMAL,
-        latitude: Number(dataEng[i].LAT),
-        longitude: Number(dataEng[i].LNG),
+        lat: Number(dataEng[i].LAT),
+        lng: Number(dataEng[i].LNG),
         tel: dataEng[i].CNTCT_TEL,
         openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
         openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
@@ -401,6 +362,8 @@ export class OpenAPIService {
 
       await this.placeRepository.save(place);
     }
+
+    console.log('관광지 저장 완료');
   }
 
   // 음식점 저장
@@ -454,14 +417,14 @@ export class OpenAPIService {
         titleJpn: dataJpn[i].TITLE,
         titleChs: dataChs[i].TITLE,
         titleCht: dataCht[i].TITLE,
-        type: '82',
+        typeId: '82',
         addressEng: dataEng[i].ADDR1,
         addressJpn: dataJpn[i].ADDR1,
         addressChs: dataChs[i].ADDR1,
         addressCht: dataCht[i].ADDR1,
         image: dataEng[i].MAIN_IMG_NORMAL,
-        latitude: Number(dataEng[i].LAT),
-        longitude: Number(dataEng[i].LNG),
+        lat: Number(dataEng[i].LAT),
+        lng: Number(dataEng[i].LNG),
         tel: dataEng[i].CNTCT_TEL,
         openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
         openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
@@ -479,6 +442,8 @@ export class OpenAPIService {
 
       await this.placeRepository.save(place);
     }
+
+    console.log('음식점 저장 완료');
   }
 
   createPlace(dataEng, dataJpn, dataChs, dataCht, additionalFields = {}) {
@@ -487,14 +452,14 @@ export class OpenAPIService {
       titleJpn: dataJpn.title,
       titleChs: dataChs.title,
       titleCht: dataCht.title,
-      type: dataEng.contenttypeid,
+      typeId: dataEng.contenttypeid,
       addressEng: dataEng.addr1,
       addressJpn: dataJpn.addr1,
       addressChs: dataChs.addr1,
       addressCht: dataCht.addr1,
       image: dataEng.firstimage,
-      latitude: Number(dataEng.mapy),
-      longitude: Number(dataEng.mapx),
+      lat: Number(dataEng.mapy),
+      lng: Number(dataEng.mapx),
       tel: dataEng.tel,
       ...additionalFields,
     });

@@ -9,36 +9,34 @@ export class PlaceController {
     private readonly placeService: PlaceService,
   ) {}
 
-  @Get('/ksave')
+  @Post('ksave')
   async fetchAndSaveKTO() {
-    this.openAPIService.saveFetchData();
+    this.openAPIService.saveFetchData('79');
+    this.openAPIService.saveFetchData('80');
   }
 
-  @Get('bsave')
+  @Post('bsave')
   async fetchAndSaveBusan() {
     this.openAPIService.saveAttractionService();
-    this.openAPIService.saveFoodService();
+    // this.openAPIService.saveFoodService();
   }
 
-  @Post('type')
+  @Get('searchByType')
   async readByType(
-    @Body('type') type: string,
-    @Body('lang') lang: string,
-    @Body('latitude') latitude: number,
-    @Body('longitude') longitude: number,
-    @Body('radius') radius: number,
+    @Query('typeId') typeId: string,
+    @Query('lang') lang: string,
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Query('radius') radius: number,
   ) {
-    return await this.placeService.findByType(
-      type,
-      lang,
-      latitude,
-      longitude,
-      radius,
-    );
+    return await this.placeService.findByType(typeId, lang, lat, lng, radius);
   }
 
-  @Post('title')
-  async readByTitle(@Body('title') title: string, @Body('lang') lang: string) {
+  @Get('searchByTitle')
+  async readByTitle(
+    @Query('title') title: string,
+    @Query('lang') lang: string,
+  ) {
     return await this.placeService.findByTitle(lang, title);
   }
 }

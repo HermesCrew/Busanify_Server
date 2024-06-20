@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { range } from 'rxjs';
-import { PlaceEntity } from 'src/entity/place.entity';
+import { PlaceEntity } from 'src/entities/place.entity';
 import { Double, Repository } from 'typeorm';
 
 @Injectable()
@@ -16,10 +16,10 @@ export class PlaceService {
   async findByTitle(lang: string, title: string): Promise<PlaceEntity[]> {
     const commonColumns = [
       'place.id AS id',
-      'place.type AS type',
+      'place.typeId AS typeId',
       'place.image AS image',
-      'place.latitude AS latitude',
-      'place.longitude AS longitude',
+      'place.lat AS lat',
+      'place.lng AS lng',
       'place.tel AS tel',
     ];
 
@@ -60,18 +60,18 @@ export class PlaceService {
   }
 
   async findByType(
-    type: string,
+    typeId: string,
     lang: string,
-    latitude: number,
-    longitude: number,
+    lat: number,
+    lng: number,
     radius: number,
   ): Promise<PlaceEntity[]> {
     const commonColumns = [
       'place.id AS id',
-      'place.type AS type',
+      'place.typeId AS typeId',
       'place.image AS image',
-      'place.latitude AS latitude',
-      'place.longitude AS longitude',
+      'place.lat AS lat',
+      'place.lng AS lng',
       'place.tel AS tel',
     ];
 
@@ -187,20 +187,20 @@ export class PlaceService {
       selectedColumns = [...selectedColumns, ...langColumns[lang]];
     }
 
-    if (typeColumns[type] && typeColumns[type][lang]) {
-      selectedColumns = [...selectedColumns, ...typeColumns[type][lang]];
+    if (typeColumns[typeId] && typeColumns[typeId][lang]) {
+      selectedColumns = [...selectedColumns, ...typeColumns[typeId][lang]];
     }
 
     const places = await this.placeRepository
       .createQueryBuilder('place')
       .select(selectedColumns)
-      .where('place.type = :type', { type: type })
+      .where('place.typeId = :typeId', { typeId: typeId })
       .andWhere(
         `ST_Distance_Sphere(
-          point(place.longitude, place.latitude),
-          point(:longitude, :latitude)
+          point(place.lng, place.lat),
+          point(:lng, :lat)
         ) <= :radius`,
-        { longitude, latitude, radius },
+        { lng, lat, radius },
       )
       .getRawMany();
 

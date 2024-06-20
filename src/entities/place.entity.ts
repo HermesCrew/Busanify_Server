@@ -6,7 +6,7 @@ export class PlaceEntity extends BaseEntity {
   id: number;
 
   @Column()
-  type: string;
+  typeId: string;
 
   @Column({ type: 'text' })
   titleEng: string;
@@ -36,10 +36,10 @@ export class PlaceEntity extends BaseEntity {
   image: string;
 
   @Column({ type: 'double' })
-  latitude: number;
+  lat: number;
 
   @Column({ type: 'double' })
-  longitude: number;
+  lng: number;
 
   @Column()
   tel: string;

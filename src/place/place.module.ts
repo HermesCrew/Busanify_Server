@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PlaceEntity } from 'src/entity/place.entity';
+import { PlaceEntity } from 'src/entities/place.entity';
 import { OpenAPIService } from './openapi.service';
 import { PlaceController } from './place.controller';
 import { PlaceService } from './place.service';
