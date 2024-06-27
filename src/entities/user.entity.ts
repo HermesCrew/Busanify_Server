@@ -4,23 +4,23 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
+  PrimaryColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { BookmarkEntity } from './bookmark.entity';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: number;
+  @PrimaryColumn()
+  id: string;
 
   @Column({ unique: true })
   email: string;
 
   @Column()
   name: string;
-
-  @Column()
-  nickname: string;
 
   @Column({ nullable: true })
   password: string;
@@ -39,4 +39,7 @@ export class UserEntity extends BaseEntity {
 
   @DeleteDateColumn()
   deletedAt: Date;
+
+  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.place)
+  bookmarks: BookmarkEntity[];
 }

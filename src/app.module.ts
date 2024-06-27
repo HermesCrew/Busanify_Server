@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { placeModule } from './place/place.module';
+import { PlaceModule } from './place/place.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -17,8 +19,10 @@ import { placeModule } from './place/place.module';
       entities: ['dist/**/*.entity.js'],
       synchronize: true,
     }),
-    placeModule,
     AuthModule,
+    PlaceModule,
+    BookmarkModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

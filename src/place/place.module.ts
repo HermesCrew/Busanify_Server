@@ -10,4 +10,4 @@ import { PlaceService } from './place.service';
   providers: [PlaceService, OpenAPIService],
   controllers: [PlaceController],
 })
-export class placeModule {}
+export class PlaceModule {}

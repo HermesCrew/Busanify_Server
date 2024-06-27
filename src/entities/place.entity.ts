@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, BaseEntity } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+  OneToMany,
+} from 'typeorm';
+import { BookmarkEntity } from './bookmark.entity';
 
 @Entity('place')
 export class PlaceEntity extends BaseEntity {
@@ -127,4 +134,7 @@ export class PlaceEntity extends BaseEntity {
 
   @Column({ nullable: true })
   restroom: boolean;
+
+  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.place)
+  bookmarks: BookmarkEntity[];
 }
