@@ -1,29 +1,33 @@
-import { Controller, Post, Param, Get, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Get,
+  Delete,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
+import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { BookmarkEntity } from 'src/entities/bookmark.entity';
 import { BookmarkService } from './bookmark.service';
 
-@Controller('bookmarks')
+@Controller('bookmark')
 export class BookmarkController {
   constructor(private readonly bookmarkService: BookmarkService) {}
 
-  // @Post(':userId/places/:placeId')
-  // async bookmarkPlace(
-  //   @Param('userId') userId: number,
-  //   @Param('placeId') placeId: number,
-  // ): Promise<BookmarkEntity> {
-  //   return this.bookmarkService.bookmarkPlace(userId, placeId);
-  // }
+  @UseGuards(GoogleAuthGuard)
+  @Post()
+  async bookmarkPlace(
+    @User() user,
+    @Body('placeId') placeId: number,
+  ): Promise<BookmarkEntity> {
+    return this.bookmarkService.bookmarkPlace(user.sub, placeId);
+  }
 
-  // @Get(':userId')
-  // async getUserBookmarks(@Param('userId') userId: number): Promise<any> {
-  //   return this.bookmarkService.getUserBookmarks(userId);
-  // }
-
-  // @Delete(':userId/places/:placeId')
-  // async removeBookmark(
-  //   @Param('userId') userId: number,
-  //   @Param('placeId') placeId: number,
-  // ): Promise<void> {
-  //   return this.bookmarkService.removeBookmark(userId, placeId);
-  // }
+  @UseGuards(GoogleAuthGuard)
+  @Get('list')
+  async getUserBookmarks(@User() user): Promise<any> {
+    return this.bookmarkService.getUserBookmarks(user.sub);
+  }
 }

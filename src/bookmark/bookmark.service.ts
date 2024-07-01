@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OAuth2Client } from 'google-auth-library';
+import { AuthService } from 'src/auth/auth.service';
 import { BookmarkEntity } from 'src/entities/bookmark.entity';
 import { PlaceEntity } from 'src/entities/place.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -14,55 +20,68 @@ export class BookmarkService {
     private placeRepository: Repository<PlaceEntity>,
     @InjectRepository(BookmarkEntity)
     private bookmarkRepository: Repository<BookmarkEntity>,
+    private readonly authService: AuthService,
   ) {}
 
-  // async bookmarkPlace(
-  //   userId: number,
-  //   placeId: number,
-  // ): Promise<BookmarkEntity> {
-  //   const user = await this.userRepository.findOne({
-  //     where: { id: userId },
-  //     relations: {
-  //       bookmarks: true,
-  //     },
-  //   });
-  //   const place = await this.placeRepository.findOne({
-  //     where: { id: placeId },
-  //     relations: {
-  //       bookmarks: true,
-  //     },
-  //   });
+  async bookmarkPlace(
+    userId: string,
+    placeId: number,
+  ): Promise<BookmarkEntity> {
+    if (!userId) {
+      throw new BadRequestException('userId is required');
+    }
 
-  //   if (!user || !place) {
-  //     throw new Error('User or Place not found');
-  //   }
+    if (!placeId) {
+      throw new BadRequestException('placeId is required');
+    }
 
-  //   const bookmark = new BookmarkEntity();
-  //   bookmark.user = user;
-  //   bookmark.place = place;
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
 
-  //   return await this.bookmarkRepository.save(bookmark);
-  // }
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  // async getUserBookmarks(userId: number): Promise<PlaceEntity[]> {
-  //   const user = await this.userRepository.findOne({
-  //     where: { id: userId },
-  //     relations: {
-  //       bookmarks: true,
-  //     },
-  //   });
+    const place = await this.placeRepository.findOne({
+      where: { id: placeId },
+    });
 
-  //   if (!user) {
-  //     throw new Error('User not found');
-  //   }
+    if (!place) {
+      throw new NotFoundException('Place not found');
+    }
 
-  //   return user.bookmarks.map((bookmark) => bookmark.place);
-  // }
+    let bookmark = await this.bookmarkRepository
+      .createQueryBuilder('bookmark')
+      .where('bookmark.userId = :userId', { userId: user.id })
+      .andWhere('bookmark.placeId = :placeId', { placeId: place.id })
+      .getOne();
 
-  // async removeBookmark(userId: number, placeId: number): Promise<void> {
-  //   await this.bookmarkRepository.delete({
-  //     user: { id: userId },
-  //     place: { id: placeId },
-  //   });
-  // }
+    if (bookmark) {
+      bookmark.deleted = !bookmark.deleted;
+    } else {
+      bookmark = this.bookmarkRepository.create({ user, place });
+    }
+
+    return await this.bookmarkRepository.save(bookmark);
+  }
+
+  async getUserBookmarks(userId: string): Promise<PlaceEntity[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const bookmarks = await this.bookmarkRepository
+      .createQueryBuilder('bookmark')
+      .leftJoinAndSelect('bookmark.place', 'place')
+      .where('bookmark.user.id = :userId', { userId: user.id })
+      .andWhere('bookmark.deleted = false')
+      .getMany();
+
+    return bookmarks.map((bookmark) => bookmark.place);
+  }
 }

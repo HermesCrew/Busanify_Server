@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { PlaceEntity } from './place.entity';
 import { UserEntity } from './user.entity';
 
@@ -12,4 +12,7 @@ export class BookmarkEntity {
 
   @ManyToOne(() => PlaceEntity, (place) => place.bookmarks)
   place: PlaceEntity;
+
+  @Column({ default: false })
+  deleted: boolean;
 }
