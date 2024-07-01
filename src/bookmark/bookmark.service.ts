@@ -23,7 +23,7 @@ export class BookmarkService {
     private readonly authService: AuthService,
   ) {}
 
-  async bookmarkPlace(
+  async toggleBookmark(
     userId: string,
     placeId: number,
   ): Promise<BookmarkEntity> {
