@@ -20,7 +20,6 @@ export class BookmarkService {
     private placeRepository: Repository<PlaceEntity>,
     @InjectRepository(BookmarkEntity)
     private bookmarkRepository: Repository<BookmarkEntity>,
-    private readonly authService: AuthService,
   ) {}
 
   async toggleBookmark(
@@ -66,7 +65,7 @@ export class BookmarkService {
     return await this.bookmarkRepository.save(bookmark);
   }
 
-  async getUserBookmarks(userId: string): Promise<PlaceEntity[]> {
+  async getBookmarksByUser(userId: string): Promise<PlaceEntity[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });

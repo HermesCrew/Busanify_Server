@@ -13,15 +13,15 @@ import { User } from 'src/auth/user.decorator';
 import { BookmarkEntity } from 'src/entities/bookmark.entity';
 import { BookmarkService } from './bookmark.service';
 
-@Controller('bookmark')
+@Controller('bookmarks')
 @ApiTags('북마크 API')
 export class BookmarkController {
   constructor(private readonly bookmarkService: BookmarkService) {}
 
   @UseGuards(GoogleAuthGuard)
-  @Post()
+  @Post('toggle')
   @ApiOperation({
-    summary: '북마크/북마크 취소 API',
+    summary: '북마크/북마크 취소',
   })
   async toggleBookmark(
     @User() user,
@@ -31,11 +31,11 @@ export class BookmarkController {
   }
 
   @UseGuards(GoogleAuthGuard)
-  @Get('list')
+  @Get('user')
   @ApiOperation({
-    summary: '사용자의 북마크 리스트 조회 API',
+    summary: '사용자의 북마크 리스트 조회',
   })
-  async getUserBookmarks(@User() user): Promise<any> {
-    return await this.bookmarkService.getUserBookmarks(user.sub);
+  async getBookmarksByUser(@User() user): Promise<any> {
+    return await this.bookmarkService.getBookmarksByUser(user.sub);
   }
 }

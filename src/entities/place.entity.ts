@@ -6,6 +6,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BookmarkEntity } from './bookmark.entity';
+import { ReviewEntity } from './review.entity';
 
 @Entity('place')
 export class PlaceEntity extends BaseEntity {
@@ -137,4 +138,7 @@ export class PlaceEntity extends BaseEntity {
 
   @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.place)
   bookmarks: BookmarkEntity[];
+
+  @OneToMany(() => ReviewEntity, (review) => review.place)
+  reviews: ReviewEntity[];
 }

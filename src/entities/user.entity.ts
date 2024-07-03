@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { BookmarkEntity } from './bookmark.entity';
+import { ReviewEntity } from './review.entity';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {
@@ -40,6 +41,9 @@ export class UserEntity extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.place)
+  @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.user)
   bookmarks: BookmarkEntity[];
+
+  @OneToMany(() => ReviewEntity, (review) => review.user)
+  reviews: ReviewEntity[];
 }
