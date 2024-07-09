@@ -22,7 +22,7 @@ export class ReviewService {
 
   async createReview(
     userId: string,
-    placeId: number,
+    placeId: string,
     rating: number,
     content: string,
     photos: string[],
@@ -139,7 +139,7 @@ export class ReviewService {
       .getMany();
   }
 
-  async getReviewsByPlace(placeId: number): Promise<ReviewEntity[]> {
+  async getReviewsByPlace(placeId: string): Promise<ReviewEntity[]> {
     if (!placeId) {
       throw new BadRequestException('placeId is required');
     }

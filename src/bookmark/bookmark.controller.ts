@@ -25,7 +25,7 @@ export class BookmarkController {
   })
   async toggleBookmark(
     @User() user,
-    @Body('placeId') placeId: number,
+    @Body('placeId') placeId: string,
   ): Promise<BookmarkEntity> {
     return await this.bookmarkService.toggleBookmark(user.sub, placeId);
   }

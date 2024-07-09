@@ -24,7 +24,7 @@ export class BookmarkService {
 
   async toggleBookmark(
     userId: string,
-    placeId: number,
+    placeId: string,
   ): Promise<BookmarkEntity> {
     if (!userId) {
       throw new BadRequestException('userId is required');

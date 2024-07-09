@@ -4,14 +4,15 @@ import {
   PrimaryGeneratedColumn,
   BaseEntity,
   OneToMany,
+  PrimaryColumn,
 } from 'typeorm';
 import { BookmarkEntity } from './bookmark.entity';
 import { ReviewEntity } from './review.entity';
 
 @Entity('place')
 export class PlaceEntity extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn()
+  id: string;
 
   @Column()
   typeId: string;
@@ -52,16 +53,16 @@ export class PlaceEntity extends BaseEntity {
   @Column()
   tel: string;
 
-  @Column()
+  @Column({ nullable: true })
   openTimeEng: string;
 
-  @Column()
+  @Column({ nullable: true })
   openTimeJpn: string;
 
-  @Column()
+  @Column({ nullable: true })
   openTimeChs: string;
 
-  @Column()
+  @Column({ nullable: true })
   openTimeCht: string;
 
   @Column({ type: 'text', nullable: true })

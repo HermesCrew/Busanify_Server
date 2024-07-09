@@ -12,7 +12,7 @@ export class PlaceService {
     private placeRepository: Repository<PlaceEntity>,
   ) {}
 
-  async findById(id: number, lang: string): Promise<PlaceEntity> {
+  async findById(id: string, lang: string): Promise<PlaceEntity> {
     const place = await this.placeRepository.findOne({
       where: { id: id },
     });
@@ -153,7 +153,11 @@ export class PlaceService {
   }
 
   // lat, long 으로 필터링 필요
-  async findByTitle(lang: string, title: string): Promise<PlaceEntity[]> {
+  async findByTitle(
+    userId: string | null,
+    lang: string,
+    title: string,
+  ): Promise<PlaceEntity[]> {
     const commonColumns = [
       'place.id AS id',
       'place.typeId AS typeId',
@@ -161,6 +165,7 @@ export class PlaceService {
       'place.lat AS lat',
       'place.lng AS lng',
       'place.tel AS tel',
+      `COALESCE(AVG(review.rating), 0) AS avgRating`,
     ];
 
     const langColumns: { [key: string]: string[] } = {
@@ -192,14 +197,33 @@ export class PlaceService {
       selectedColumns = [...selectedColumns, ...langColumns[lang]];
     }
 
-    return await this.placeRepository
+    if (userId) {
+      selectedColumns.push('MAX(bookmark.id IS NOT NULL) AS isBookmarked');
+    } else {
+      selectedColumns.push(`false AS isBookmarked`);
+    }
+
+    const queryBuilder = this.placeRepository
       .createQueryBuilder('place')
       .select(selectedColumns)
+      .leftJoin('review', 'review', 'review.placeId = place.id')
+      .groupBy('place.id');
+
+    if (userId) {
+      queryBuilder.leftJoin(
+        'bookmark',
+        'bookmark',
+        'bookmark.placeId = place.id AND bookmark.userId = :userId AND bookmark.deleted = false',
+        { userId: userId },
+      );
+    }
+    return await queryBuilder
       .where('place.titleEng LIKE :title', { title: `%${title}%` })
       .getRawMany();
   }
 
   async findByType(
+    userId: string | null,
     typeId: string,
     lang: string,
     lat: number,
@@ -213,6 +237,7 @@ export class PlaceService {
       'place.lat AS lat',
       'place.lng AS lng',
       'place.tel AS tel',
+      `COALESCE(AVG(review.rating), 0) AS avgRating`,
     ];
 
     const langColumns: { [key: string]: string[] } = {
@@ -331,9 +356,28 @@ export class PlaceService {
       selectedColumns = [...selectedColumns, ...typeColumns[typeId][lang]];
     }
 
-    const places = await this.placeRepository
+    if (userId) {
+      selectedColumns.push('MAX(bookmark.id IS NOT NULL) AS isBookmarked');
+    } else {
+      selectedColumns.push(`false AS isBookmarked`);
+    }
+
+    const queryBuilder = this.placeRepository
       .createQueryBuilder('place')
       .select(selectedColumns)
+      .leftJoin('review', 'review', 'review.placeId = place.id')
+      .groupBy('place.id');
+
+    if (userId) {
+      queryBuilder.leftJoin(
+        'bookmark',
+        'bookmark',
+        'bookmark.placeId = place.id AND bookmark.userId = :userId AND bookmark.deleted = false',
+        { userId: userId },
+      );
+    }
+
+    return await queryBuilder
       .where('place.typeId = :typeId', { typeId: typeId })
       .andWhere(
         `ST_Distance_Sphere(
@@ -343,8 +387,5 @@ export class PlaceService {
         { lng, lat, radius },
       )
       .getRawMany();
-
-    console.log(places.length);
-    return places;
   }
 }

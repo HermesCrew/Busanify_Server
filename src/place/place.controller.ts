@@ -1,6 +1,20 @@
-import { Controller, Get, Param, Body, Query, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PlaceEntity } from 'src/entities/place.entity';
+import {
+  Controller,
+  Get,
+  Param,
+  Body,
+  Query,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiCreatedResponse,
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { PlaceService } from 'src/place/place.service';
 import { OpenAPIService } from './openapi.service';
 
@@ -12,24 +26,31 @@ export class PlaceController {
     private readonly placeService: PlaceService,
   ) {}
 
-  @Post('ksave')
-  @ApiOperation({
-    summary: '한국관광공사 데이터 저장',
-  })
-  async fetchAndSaveKTO() {
+  @Post('saveshopping')
+  @ApiExcludeEndpoint()
+  async fetchAndSaveShopping() {
     this.openAPIService.saveFetchData('79');
+  }
+
+  @Post('savestay')
+  @ApiExcludeEndpoint()
+  async fetchAndSaveStay() {
     this.openAPIService.saveFetchData('80');
   }
 
-  @Post('bsave')
-  @ApiOperation({
-    summary: '부산광역시 데이터 저장',
-  })
-  async fetchAndSaveBusan() {
+  @Post('saveattr')
+  @ApiExcludeEndpoint()
+  async fetchAndSaveAttr() {
     this.openAPIService.saveAttractionService();
+  }
+
+  @Post('savefood')
+  @ApiExcludeEndpoint()
+  async fetchAndSaveBusan() {
     this.openAPIService.saveFoodService();
   }
 
+  @UseGuards(GoogleAuthGuard)
   @Get('searchByType')
   @ApiOperation({
     summary: '장소 타입으로 조회',
@@ -37,25 +58,70 @@ export class PlaceController {
       'typeId(관광지: 76, 쇼핑: 79, 숙박: 80, 음식점: 82)\n lang(eng, jpn, chs, cht)\n lat: 사용자 위도, lng: 사용자 경도, radius: 반경',
   })
   async readByType(
+    @User() user,
     @Query('typeId') typeId: string,
     @Query('lang') lang: string,
     @Query('lat') lat: number,
     @Query('lng') lng: number,
     @Query('radius') radius: number,
   ) {
-    return await this.placeService.findByType(typeId, lang, lat, lng, radius);
+    return await this.placeService.findByType(
+      user.sub,
+      typeId,
+      lang,
+      lat,
+      lng,
+      radius,
+    );
   }
 
+  @Get('searchByTypeNoUser')
+  @ApiOperation({
+    summary: '장소 타입으로 조회',
+    description:
+      'typeId(관광지: 76, 쇼핑: 79, 숙박: 80, 음식점: 82)\n lang(eng, jpn, chs, cht)\n lat: 사용자 위도, lng: 사용자 경도, radius: 반경',
+  })
+  async readByTypeWhenNoUser(
+    @Query('typeId') typeId: string,
+    @Query('lang') lang: string,
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Query('radius') radius: number,
+  ) {
+    return await this.placeService.findByType(
+      null,
+      typeId,
+      lang,
+      lat,
+      lng,
+      radius,
+    );
+  }
+
+  @UseGuards(GoogleAuthGuard)
   @Get('searchByTitle')
   @ApiOperation({
     summary: '장소 이름으로 조회',
     description: 'lang(eng, jpn, chs, cht)',
   })
   async readByTitle(
+    @User() user,
     @Query('title') title: string,
     @Query('lang') lang: string,
   ) {
-    return await this.placeService.findByTitle(lang, title);
+    return await this.placeService.findByTitle(user.sub, lang, title);
+  }
+
+  @Get('searchByTitleNoUser')
+  @ApiOperation({
+    summary: '장소 이름으로 조회',
+    description: 'lang(eng, jpn, chs, cht)',
+  })
+  async readByTitleWhenNoUser(
+    @Query('title') title: string,
+    @Query('lang') lang: string,
+  ) {
+    return await this.placeService.findByTitle(null, lang, title);
   }
 
   @Get()
@@ -63,7 +129,7 @@ export class PlaceController {
     summary: '장소 아이디로 조회',
     description: 'lang(eng, jpn, chs, cht)',
   })
-  async getById(@Query('id') id: number, @Query('lang') lang: string) {
+  async getById(@Query('id') id: string, @Query('lang') lang: string) {
     return await this.placeService.findById(id, lang);
   }
 }

@@ -142,6 +142,8 @@ export class OpenAPIService {
   }
 
   async saveFetchData(typeId: string) {
+    const BS_SHOPPING_PREFIX = 'BS_SHOP_';
+    const BS_STAY_PREFIX = 'BS_STAY_';
     const baseUrlEng = `https://apis.data.go.kr/B551011/EngService1/areaBasedList1?&MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
     const baseUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
     const baseUrlChs = `https://apis.data.go.kr/B551011/ChsService1/areaBasedList1?MobileOS=IOS&MobileApp=App&_type=JSON&contentTypeId=${typeId}&areaCode=6&serviceKey=${this.serviceKey}`;
@@ -176,6 +178,40 @@ export class OpenAPIService {
     dataChs = this.getIntersection(dataChs, dataIntersection);
     dataCht = this.getIntersection(dataCht, dataIntersection);
 
+    // 삭제 처리
+    if (typeId === '79') {
+      const apiPlaceIds = dataEng.map(
+        (place) => BS_SHOPPING_PREFIX + place.contentid,
+      );
+
+      const dbPlaces = await this.placeRepository.find({
+        where: { typeId: typeId },
+      });
+      const dbPlaceIds = dbPlaces.map((place) => place.id);
+
+      const idsToDelete = dbPlaceIds.filter((id) => !apiPlaceIds.includes(id));
+
+      if (idsToDelete.length > 0) {
+        await this.placeRepository.delete(idsToDelete);
+      }
+    } else if (typeId === '80') {
+      const apiPlaceIds = dataEng.map(
+        (place) => BS_STAY_PREFIX + place.contentid,
+      );
+
+      const dbPlaces = await this.placeRepository.find({
+        where: { typeId: typeId },
+      });
+      const dbPlaceIds = dbPlaces.map((place) => place.id);
+
+      const idsToDelete = dbPlaceIds.filter((id) => !apiPlaceIds.includes(id));
+
+      if (idsToDelete.length > 0) {
+        await this.placeRepository.delete(idsToDelete);
+      }
+    }
+
+    // 저장
     for (let i = 0; i < dataEng.length; i++) {
       const detailUrlEng = `https://apis.data.go.kr/B551011/EngService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataEng[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
       const detailUrlJpn = `https://apis.data.go.kr/B551011/JpnService1/detailIntro1?MobileOS=IOS&MobileApp=App&_type=JSON&contentId=${dataJpn[i].contentid}&contentTypeId=${typeId}&serviceKey=${this.serviceKey}`;
@@ -190,63 +226,268 @@ export class OpenAPIService {
       switch (typeId) {
         // 쇼핑
         case '79':
-          const additionalFields79 = {
-            openTimeEng: detailDataEng[0].opentime ?? '',
-            openTimeJpn: detailDataJpn[0].opentime ?? '',
-            openTimeChs: detailDataChs[0].opentime ?? '',
-            openTimeCht: detailDataCht[0].opentime ?? '',
+          const id79: string = BS_SHOPPING_PREFIX + dataEng[i].contentid;
 
-            holidayEng: detailDataEng[0].restdateshopping,
-            holidayJpn: detailDataJpn[0].restdateshopping,
-            holidayChs: detailDataChs[0].restdateshopping,
-            holidayCht: detailDataCht[0].restdateshopping,
+          const existingPlace79 = await this.placeRepository.findOne({
+            where: { id: id79 },
+          });
 
-            parkingEng: detailDataEng[0].parkingshopping,
-            parkingJpn: detailDataJpn[0].parkingshopping,
-            parkingChs: detailDataChs[0].parkingshopping,
-            parkingCht: detailDataCht[0].parkingshopping,
+          if (!existingPlace79) {
+            const place79 = this.placeRepository.create({
+              id: id79,
+              titleEng: dataEng[i].title,
+              titleJpn: dataJpn[i].title,
+              titleChs: dataChs[i].title,
+              titleCht: dataCht[i].title,
+              typeId: dataEng[i].contenttypeid,
+              addressEng: dataEng[i].addr1,
+              addressJpn: dataJpn[i].addr1,
+              addressChs: dataChs[i].addr1,
+              addressCht: dataCht[i].addr1,
+              image: dataEng[i].firstimage,
+              lat: Number(dataEng[i].mapy),
+              lng: Number(dataEng[i].mapx),
+              tel: this.normalizePhoneNumber(dataEng[i].tel),
+              openTimeEng: this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              ),
+              openTimeJpn: this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              ),
+              openTimeChs: this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              ),
+              openTimeCht: this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              ),
 
-            restroom: detailDataEng[0].restroom.includes('Available'),
+              holidayEng: detailDataEng[0].restdateshopping,
+              holidayJpn: detailDataJpn[0].restdateshopping,
+              holidayChs: detailDataChs[0].restdateshopping,
+              holidayCht: detailDataCht[0].restdateshopping,
 
-            shopguideEng: detailDataEng[0].shopguide,
-            shopguideJpn: detailDataJpn[0].shopguide,
-            shopguideChs: detailDataChs[0].shopguide,
-            shopguideCht: detailDataCht[0].shopguide,
-          };
-          const place79 = this.createPlace(
-            dataEng[i],
-            dataJpn[i],
-            dataChs[i],
-            dataCht[i],
-            additionalFields79,
-          );
-          await this.placeRepository.save(place79);
+              parkingEng: this.normalizeParkingInfo(
+                detailDataEng[0].parkingshopping,
+              ),
+              parkingJpn:
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? 'あり'
+                  : 'なし',
+              parkingChs:
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? '可'
+                  : '不可',
+              parkingCht:
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? '有'
+                  : '無',
+
+              restroom: detailDataEng[0].restroom.includes('Available'),
+
+              shopguideEng: detailDataEng[0].shopguide,
+              shopguideJpn: detailDataJpn[0].shopguide,
+              shopguideChs: detailDataChs[0].shopguide,
+              shopguideCht: detailDataCht[0].shopguide,
+            });
+            await this.placeRepository.save(place79);
+          } else {
+            (existingPlace79.titleEng = dataEng[i].title),
+              (existingPlace79.titleJpn = dataJpn[i].title),
+              (existingPlace79.titleChs = dataChs[i].title),
+              (existingPlace79.titleCht = dataCht[i].title),
+              (existingPlace79.addressEng = dataEng[i].addr1),
+              (existingPlace79.addressJpn = dataJpn[i].addr1),
+              (existingPlace79.addressChs = dataChs[i].addr1),
+              (existingPlace79.addressCht = dataCht[i].addr1),
+              (existingPlace79.image = dataEng[i].firstimage),
+              (existingPlace79.lat = Number(dataEng[i].mapy)),
+              (existingPlace79.lng = Number(dataEng[i].mapx)),
+              (existingPlace79.tel = this.normalizePhoneNumber(dataEng[i].tel)),
+              (existingPlace79.openTimeEng = this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              )),
+              (existingPlace79.openTimeJpn = this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              )),
+              (existingPlace79.openTimeChs = this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              )),
+              (existingPlace79.openTimeCht = this.extractTimeForShopping(
+                detailDataEng[0].opentime,
+              )),
+              (existingPlace79.holidayEng = detailDataEng[0].restdateshopping),
+              (existingPlace79.holidayJpn = detailDataJpn[0].restdateshopping),
+              (existingPlace79.holidayChs = detailDataChs[0].restdateshopping),
+              (existingPlace79.holidayCht = detailDataCht[0].restdateshopping),
+              (existingPlace79.parkingEng = this.normalizeParkingInfo(
+                detailDataEng[0].parkingshopping,
+              )),
+              (existingPlace79.parkingJpn =
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? 'あり'
+                  : 'なし'),
+              (existingPlace79.parkingChs =
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? '可'
+                  : '不可'),
+              (existingPlace79.parkingCht =
+                this.normalizeParkingInfo(detailDataEng[0].parkingshopping) ===
+                'Available'
+                  ? '有'
+                  : '無'),
+              (existingPlace79.restroom =
+                detailDataEng[0].restroom.includes('Available')),
+              (existingPlace79.shopguideEng = detailDataEng[0].shopguide),
+              (existingPlace79.shopguideJpn = detailDataJpn[0].shopguide),
+              (existingPlace79.shopguideChs = detailDataChs[0].shopguide),
+              (existingPlace79.shopguideCht = detailDataCht[0].shopguide),
+              await this.placeRepository.save(existingPlace79);
+          }
           break;
         // 숙박
         case '80':
-          const additionalFields80 = {
-            openTimeEng: detailDataEng[0].opentime ?? '',
-            openTimeJpn: detailDataJpn[0].opentime ?? '',
-            openTimeChs: detailDataChs[0].opentime ?? '',
-            openTimeCht: detailDataCht[0].opentime ?? '',
+          const id80: string = BS_STAY_PREFIX + dataEng[i].contentid;
 
-            parkingEng: detailDataEng[0].parkingshopping,
-            parkingJpn: detailDataJpn[0].parkingshopping,
-            parkingChs: detailDataChs[0].parkingshopping,
-            parkingCht: detailDataCht[0].parkingshopping,
+          const existingPlace80 = await this.placeRepository.findOne({
+            where: { id: id80 },
+          });
 
-            reservationURL: detailDataEng[0].reservationurl,
-            goodStay: detailDataEng[0].goodstay === '0' ? false : true,
-            hanok: detailDataEng[0].hanok === '0' ? false : true,
-          };
-          const place80 = this.createPlace(
-            dataEng[i],
-            dataJpn[i],
-            dataChs[i],
-            dataCht[i],
-            additionalFields80,
-          );
-          await this.placeRepository.save(place80);
+          if (!existingPlace80) {
+            const place80 = this.placeRepository.create({
+              id: id80,
+              titleEng: dataEng[i].title,
+              titleJpn: dataJpn[i].title,
+              titleChs: dataChs[i].title,
+              titleCht: dataCht[i].title,
+              typeId: dataEng[i].contenttypeid,
+              addressEng: dataEng[i].addr1,
+              addressJpn: dataJpn[i].addr1,
+              addressChs: dataChs[i].addr1,
+              addressCht: dataCht[i].addr1,
+              image: dataEng[i].firstimage,
+              lat: Number(dataEng[i].mapy),
+              lng: Number(dataEng[i].mapx),
+              tel: this.normalizePhoneNumber(dataEng[i].tel),
+
+              openTimeEng:
+                this.extractTime(detailDataEng[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataEng[0].checkouttime),
+              openTimeJpn:
+                this.extractTime(detailDataEng[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataEng[0].checkouttime),
+              openTimeChs:
+                this.extractTime(detailDataEng[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataEng[0].checkouttime),
+              openTimeCht:
+                this.extractTime(detailDataEng[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataEng[0].checkouttime),
+
+              parkingEng: this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              ),
+              parkingJpn: this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? 'あり'
+                  : 'なし'
+                : '',
+              parkingChs: this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? '可'
+                  : '不可'
+                : '',
+              parkingCht: this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? '有'
+                  : '無'
+                : '',
+
+              reservationURL: detailDataEng[0].reservationurl,
+              goodStay: detailDataEng[0].goodstay === '0' ? false : true,
+              hanok: detailDataEng[0].hanok === '0' ? false : true,
+            });
+            await this.placeRepository.save(place80);
+          } else {
+            (existingPlace80.titleEng = dataEng[i].title),
+              (existingPlace80.titleJpn = dataJpn[i].title),
+              (existingPlace80.titleChs = dataChs[i].title),
+              (existingPlace80.titleCht = dataCht[i].title),
+              (existingPlace80.addressEng = dataEng[i].addr1),
+              (existingPlace80.addressJpn = dataJpn[i].addr1),
+              (existingPlace80.addressChs = dataChs[i].addr1),
+              (existingPlace80.addressCht = dataCht[i].addr1),
+              (existingPlace80.image = dataEng[i].firstimage),
+              (existingPlace80.lat = Number(dataEng[i].mapy)),
+              (existingPlace80.lng = Number(dataEng[i].mapx)),
+              (existingPlace80.tel = this.normalizePhoneNumber(dataEng[i].tel)),
+              (existingPlace80.openTimeEng =
+                this.extractTime(detailDataEng[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataEng[0].checkouttime)),
+              (existingPlace80.openTimeJpn =
+                this.extractTime(detailDataJpn[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataJpn[0].checkouttime)),
+              (existingPlace80.openTimeChs =
+                this.extractTime(detailDataChs[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataChs[0].checkouttime)),
+              (existingPlace80.openTimeCht =
+                this.extractTime(detailDataCht[0].checkintime) +
+                '-' +
+                this.extractTime(detailDataCht[0].checkouttime)),
+              (existingPlace80.parkingEng = this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )),
+              (existingPlace80.parkingJpn = this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? 'あり'
+                  : 'なし'
+                : ''),
+              (existingPlace80.parkingChs = this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? '可'
+                  : '不可'
+                : ''),
+              (existingPlace80.parkingCht = this.normalizeParkingInfo(
+                detailDataEng[0].parkinglodging,
+              )
+                ? this.normalizeParkingInfo(detailDataEng[0].parkinglodging) ===
+                  'Available'
+                  ? '有'
+                  : '無'
+                : ''),
+              (existingPlace80.reservationURL =
+                detailDataEng[0].reservationurl),
+              (existingPlace80.goodStay =
+                detailDataEng[0].goodstay === '0' ? false : true),
+              (existingPlace80.hanok =
+                detailDataEng[0].hanok === '0' ? false : true),
+              await this.placeRepository.save(existingPlace80);
+          }
           break;
       }
     }
@@ -256,6 +497,7 @@ export class OpenAPIService {
 
   // 관광지 저장
   async saveAttractionService() {
+    const BS_ATTR_PREFIX = 'BS_ATTR_';
     const baseUrlEng = `https://apis.data.go.kr/6260000/AttractionService/getAttractionEn?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
     const baseUrlJpn = `https://apis.data.go.kr/6260000/AttractionService/getAttractionJa?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
     const baseUrlChs = `https://apis.data.go.kr/6260000/AttractionService/getAttractionZhs?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
@@ -311,56 +553,133 @@ export class OpenAPIService {
     dataChs = this.getIntersectionAttractionService(dataChs, dataIntersection);
     dataCht = this.getIntersectionAttractionService(dataCht, dataIntersection);
 
+    // 삭제 처리
+    const apiPlaceIds = dataEng.map((place) => BS_ATTR_PREFIX + place.UC_SEQ);
+
+    const dbPlaces = await this.placeRepository.find({
+      where: { typeId: '76' },
+    });
+    const dbPlaceIds = dbPlaces.map((place) => place.id);
+
+    const idsToDelete = dbPlaceIds.filter((id) => !apiPlaceIds.includes(id));
+
+    if (idsToDelete.length > 0) {
+      await this.placeRepository.delete(idsToDelete);
+    }
+
+    // 저장
     for (let i = 0; i < dataEng.length; i++) {
-      const place = this.placeRepository.create({
-        titleEng: dataEng[i].PLACE,
-        titleJpn: dataJpn[i].PLACE,
-        titleChs: dataChs[i].PLACE,
-        titleCht: dataCht[i].PLACE,
-        typeId: '76',
-        addressEng: dataEng[i].ADDR1,
-        addressJpn: dataJpn[i].ADDR1,
-        addressChs: dataChs[i].ADDR1,
-        addressCht: dataCht[i].ADDR1,
-        image: dataEng[i].MAIN_IMG_NORMAL,
-        lat: Number(dataEng[i].LAT),
-        lng: Number(dataEng[i].LNG),
-        tel: dataEng[i].CNTCT_TEL,
-        openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeChs: dataChs[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeCht: dataCht[i].USAGE_DAY_WEEK_AND_TIME,
-        parkingEng: dataEng[i].TRFC_INFO.includes(':')
-          ? dataEng[i].TRFC_INFO.slice(
-              dataEng[i].TRFC_INFO.indexOf(':') + 1,
-            ).trim()
-          : '',
-        parkingJpn: dataJpn[i].TRFC_INFO.includes('駐車：')
-          ? dataJpn[i].TRFC_INFO.slice(
-              dataJpn[i].TRFC_INFO.indexOf('駐車：') + '駐車：'.length,
-            ).trim()
-          : '',
-        parkingChs: dataChs[i].TRFC_INFO.includes('停车 ')
-          ? dataChs[i].TRFC_INFO.slice(
-              dataChs[i].TRFC_INFO.indexOf('停车 ') + '停车 '.length,
-            ).trim()
-          : '',
-        parkingCht: dataCht[i].TRFC_INFO.includes('停車 ')
-          ? dataCht[i].TRFC_INFO.slice(
-              dataCht[i].TRFC_INFO.indexOf('停車 ') + '停車 '.length,
-            ).trim()
-          : '',
-        holidayEng: dataEng[i].HLDY_INFO,
-        holidayJpn: dataJpn[i].HLDY_INFO,
-        holidayChs: dataChs[i].HLDY_INFO,
-        holidayCht: dataCht[i].HLDY_INFO,
-        feeEng: dataEng[i].USAGE_AMOUNT,
-        feeJpn: dataJpn[i].USAGE_AMOUNT,
-        feeChs: dataChs[i].USAGE_AMOUNT,
-        feeCht: dataCht[i].USAGE_AMOUNT,
+      const id: string = BS_ATTR_PREFIX + dataEng[i].UC_SEQ;
+
+      const existingPlace = await this.placeRepository.findOne({
+        where: { id: id },
       });
 
-      await this.placeRepository.save(place);
+      if (!existingPlace) {
+        const place = this.placeRepository.create({
+          id: id,
+          titleEng: dataEng[i].PLACE,
+          titleJpn: dataJpn[i].PLACE,
+          titleChs: dataChs[i].PLACE,
+          titleCht: dataCht[i].PLACE,
+          typeId: '76',
+          addressEng: dataEng[i].ADDR1,
+          addressJpn: dataJpn[i].ADDR1,
+          addressChs: dataChs[i].ADDR1,
+          addressCht: dataCht[i].ADDR1,
+          image: dataEng[i].MAIN_IMG_NORMAL,
+          lat: Number(dataEng[i].LAT),
+          lng: Number(dataEng[i].LNG),
+          tel: this.normalizePhoneNumber(dataEng[i].CNTCT_TEL),
+          openTimeEng: this.extractTimeForAttr(
+            dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+          ),
+          openTimeJpn:
+            this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 時間営業'
+              : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          openTimeChs:
+            this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 小时营业'
+              : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          openTimeCht:
+            this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 小時營業'
+              : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          parkingEng: dataEng[i].TRFC_INFO.includes(':')
+            ? 'Available'
+            : 'Not available',
+          parkingJpn: dataEng[i].TRFC_INFO.includes(':') ? 'あり' : 'なし',
+          parkingChs: dataEng[i].TRFC_INFO.includes(':') ? '可' : '不可',
+          parkingCht: dataEng[i].TRFC_INFO.includes(':') ? '有' : '無',
+          holidayEng: dataEng[i].HLDY_INFO,
+          holidayJpn: dataJpn[i].HLDY_INFO,
+          holidayChs: dataChs[i].HLDY_INFO,
+          holidayCht: dataCht[i].HLDY_INFO,
+          feeEng: dataEng[i].USAGE_AMOUNT,
+          feeJpn: dataJpn[i].USAGE_AMOUNT,
+          feeChs: dataChs[i].USAGE_AMOUNT,
+          feeCht: dataCht[i].USAGE_AMOUNT,
+        });
+
+        await this.placeRepository.save(place);
+      } else {
+        existingPlace.titleEng = dataEng[i].PLACE;
+        existingPlace.titleJpn = dataJpn[i].PLACE;
+        existingPlace.titleChs = dataChs[i].PLACE;
+        existingPlace.titleCht = dataCht[i].PLACE;
+        existingPlace.addressEng = dataEng[i].ADDR1;
+        existingPlace.addressJpn = dataJpn[i].ADDR1;
+        existingPlace.addressChs = dataChs[i].ADDR1;
+        existingPlace.addressCht = dataCht[i].ADDR1;
+        existingPlace.image = dataEng[i].MAIN_IMG_NORMAL;
+        existingPlace.lat = Number(dataEng[i].LAT);
+        existingPlace.lng = Number(dataEng[i].LNG);
+        existingPlace.tel = this.normalizePhoneNumber(dataEng[i].CNTCT_TEL);
+        existingPlace.openTimeEng = this.extractTimeForAttr(
+          dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+        );
+        existingPlace.openTimeJpn =
+          this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 時間営業'
+            : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.openTimeChs =
+          this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 小时营业'
+            : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.openTimeCht =
+          this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 小時營業'
+            : this.extractTimeForAttr(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.parkingEng = dataEng[i].TRFC_INFO.includes(':')
+          ? 'Available'
+          : 'Not available';
+        existingPlace.parkingJpn = dataEng[i].TRFC_INFO.includes(':')
+          ? 'あり'
+          : 'なし';
+        existingPlace.parkingChs = dataEng[i].TRFC_INFO.includes(':')
+          ? '可'
+          : '不可';
+        existingPlace.parkingCht = dataEng[i].TRFC_INFO.includes(':')
+          ? '有'
+          : '無';
+        existingPlace.holidayEng = dataEng[i].HLDY_INFO;
+        existingPlace.holidayJpn = dataJpn[i].HLDY_INFO;
+        existingPlace.holidayChs = dataChs[i].HLDY_INFO;
+        existingPlace.holidayCht = dataCht[i].HLDY_INFO;
+        existingPlace.feeEng = dataEng[i].USAGE_AMOUNT;
+        existingPlace.feeJpn = dataJpn[i].USAGE_AMOUNT;
+        existingPlace.feeChs = dataChs[i].USAGE_AMOUNT;
+        existingPlace.feeCht = dataCht[i].USAGE_AMOUNT;
+
+        await this.placeRepository.save(existingPlace);
+      }
     }
 
     console.log('관광지 저장 완료');
@@ -368,6 +687,7 @@ export class OpenAPIService {
 
   // 음식점 저장
   async saveFoodService() {
+    const BS_FOOD_PREFIX = 'BS_FOOD_';
     const baseUrlEng = `https://apis.data.go.kr/6260000/FoodService/getFoodEn?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
     const baseUrlJpn = `https://apis.data.go.kr/6260000/FoodService/getFoodJa?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
     const baseUrlChs = `https://apis.data.go.kr/6260000/FoodService/getFoodZhs?serviceKey=${this.serviceKey}&pageNo=1&resultType=json`;
@@ -411,43 +731,115 @@ export class OpenAPIService {
     dataChs = this.getIntersectionAttractionService(dataChs, dataIntersection);
     dataCht = this.getIntersectionAttractionService(dataCht, dataIntersection);
 
+    // 삭제 처리
+    const apiPlaceIds = dataEng.map((place) => BS_FOOD_PREFIX + place.UC_SEQ);
+
+    const dbPlaces = await this.placeRepository.find({
+      where: { typeId: '82' },
+    });
+    const dbPlaceIds = dbPlaces.map((place) => place.id);
+
+    const idsToDelete = dbPlaceIds.filter((id) => !apiPlaceIds.includes(id));
+
+    if (idsToDelete.length > 0) {
+      await this.placeRepository.delete(idsToDelete);
+    }
+
     for (let i = 0; i < dataEng.length; i++) {
-      const place = this.placeRepository.create({
-        titleEng: dataEng[i].TITLE,
-        titleJpn: dataJpn[i].TITLE,
-        titleChs: dataChs[i].TITLE,
-        titleCht: dataCht[i].TITLE,
-        typeId: '82',
-        addressEng: dataEng[i].ADDR1,
-        addressJpn: dataJpn[i].ADDR1,
-        addressChs: dataChs[i].ADDR1,
-        addressCht: dataCht[i].ADDR1,
-        image: dataEng[i].MAIN_IMG_NORMAL,
-        lat: Number(dataEng[i].LAT),
-        lng: Number(dataEng[i].LNG),
-        tel: dataEng[i].CNTCT_TEL,
-        openTimeEng: dataEng[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeJpn: dataJpn[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeChs: dataChs[i].USAGE_DAY_WEEK_AND_TIME,
-        openTimeCht: dataCht[i].USAGE_DAY_WEEK_AND_TIME,
-        holidayEng: dataEng[i].HLDY_INFO,
-        holidayJpn: dataJpn[i].HLDY_INFO,
-        holidayChs: dataChs[i].HLDY_INFO,
-        holidayCht: dataCht[i].HLDY_INFO,
-        menuEng: dataEng[i].RPRSNTV_MENU,
-        menuJpn: dataJpn[i].RPRSNTV_MENU,
-        menuChs: dataChs[i].RPRSNTV_MENU,
-        menuCht: dataCht[i].RPRSNTV_MENU,
+      const id: string = BS_FOOD_PREFIX + dataEng[i].UC_SEQ;
+
+      const existingPlace = await this.placeRepository.findOne({
+        where: { id: id },
       });
 
-      await this.placeRepository.save(place);
+      if (!existingPlace) {
+        const place = this.placeRepository.create({
+          id: id,
+          titleEng: dataEng[i].TITLE,
+          titleJpn: dataJpn[i].TITLE,
+          titleChs: dataChs[i].TITLE,
+          titleCht: dataCht[i].TITLE,
+          typeId: '82',
+          addressEng: dataEng[i].ADDR1,
+          addressJpn: dataJpn[i].ADDR1,
+          addressChs: dataChs[i].ADDR1,
+          addressCht: dataCht[i].ADDR1,
+          image: dataEng[i].MAIN_IMG_NORMAL,
+          lat: Number(dataEng[i].LAT),
+          lng: Number(dataEng[i].LNG),
+          tel: this.normalizePhoneNumber(dataEng[i].CNTCT_TEL),
+          openTimeEng: this.extractTimeForFood(
+            dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+          ),
+          openTimeJpn:
+            this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 時間営業'
+              : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          openTimeChs:
+            this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 小时营业'
+              : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          openTimeCht:
+            this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+            'Open 24 hours'
+              ? '24 小時營業'
+              : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
+          menuEng: dataEng[i].RPRSNTV_MENU,
+          menuJpn: dataJpn[i].RPRSNTV_MENU,
+          menuChs: dataChs[i].RPRSNTV_MENU,
+          menuCht: dataCht[i].RPRSNTV_MENU,
+        });
+
+        await this.placeRepository.save(place);
+      } else {
+        existingPlace.titleEng = dataEng[i].TITLE;
+        existingPlace.titleJpn = dataJpn[i].TITLE;
+        existingPlace.titleChs = dataChs[i].TITLE;
+        existingPlace.titleCht = dataCht[i].TITLE;
+        existingPlace.typeId = '82';
+        existingPlace.addressEng = dataEng[i].ADDR1;
+        existingPlace.addressJpn = dataJpn[i].ADDR1;
+        existingPlace.addressChs = dataChs[i].ADDR1;
+        existingPlace.addressCht = dataCht[i].ADDR1;
+        existingPlace.image = dataEng[i].MAIN_IMG_NORMAL;
+        existingPlace.lat = Number(dataEng[i].LAT);
+        existingPlace.lng = Number(dataEng[i].LNG);
+        existingPlace.tel = this.normalizePhoneNumber(dataEng[i].CNTCT_TEL);
+        existingPlace.openTimeEng = this.extractTimeForFood(
+          dataEng[i].USAGE_DAY_WEEK_AND_TIME,
+        );
+        existingPlace.openTimeJpn =
+          this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 時間営業'
+            : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.openTimeChs =
+          this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 小时营业'
+            : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.openTimeCht =
+          this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME) ===
+          'Open 24 hours'
+            ? '24 小時營業'
+            : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
+        existingPlace.menuEng = dataEng[i].RPRSNTV_MENU;
+        existingPlace.menuJpn = dataJpn[i].RPRSNTV_MENU;
+        existingPlace.menuChs = dataChs[i].RPRSNTV_MENU;
+        existingPlace.menuCht = dataCht[i].RPRSNTV_MENU;
+
+        await this.placeRepository.save(existingPlace);
+      }
     }
 
     console.log('음식점 저장 완료');
   }
 
-  createPlace(dataEng, dataJpn, dataChs, dataCht, additionalFields = {}) {
+  createPlace(id, dataEng, dataJpn, dataChs, dataCht, additionalFields = {}) {
     return this.placeRepository.create({
+      id: id,
       titleEng: dataEng.title,
       titleJpn: dataJpn.title,
       titleChs: dataChs.title,
@@ -497,5 +889,285 @@ export class OpenAPIService {
     );
 
     return filteredArr;
+  }
+
+  extractTime(openTime) {
+    const cleanedTime = openTime.replace(/;/g, ':').replace(/\s+/g, '');
+
+    const timeMatch = cleanedTime.match(/\d{2}:\d{2}(?::\d{2})?/);
+
+    if (timeMatch) {
+      return timeMatch[0].slice(0, 5);
+    }
+
+    return '';
+  }
+
+  extractTimeForShopping(openTime) {
+    const cleanedTime = openTime.replace(/;/g, ':').replace(/\s+/g, '');
+
+    // 정규식을 사용하여 시간 형식을 추출
+    const timeMatch = cleanedTime.match(
+      /(\d{1,2}[:]\d{2})[-–~](\d{1,2}[:]\d{2})/,
+    );
+
+    if (timeMatch) {
+      // 시간을 'HH:MM' 형식으로 맞춤
+      let startTime = timeMatch[1].padStart(5, '0');
+      let endTime = timeMatch[2].padStart(5, '0');
+
+      // '10:00-20:00' 형식으로 반환
+      return `${startTime}-${endTime}`;
+    }
+
+    return '';
+  }
+
+  extractTimeForAttr(timeRange) {
+    const cleanedInfo = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    // 시간을 추출하고 표준 형식으로 변환
+    const timeMatch = cleanedInfo.match(
+      /(\d{1,2}[:]\d{2})[-–~](\d{1,2}[:]\d{2})/,
+    );
+
+    if (timeMatch) {
+      // 시간을 'HH:MM' 형식으로 맞춤
+      let startTime = timeMatch[1].padStart(5, '0');
+      let endTime = timeMatch[2].padStart(5, '0');
+
+      // 'HH:MM-HH:MM' 형식으로 반환
+      return `${startTime}-${endTime}`;
+    }
+
+    // "Open 24 hours"로 변환할 패턴
+    const alwaysOpenPatterns = [
+      'openallyearround',
+      'open365daysayear',
+      'everyday',
+      'atalltimes',
+      'always',
+      '24/7',
+    ];
+
+    // "Open 24 hours"로 변환
+    if (alwaysOpenPatterns.some((pattern) => cleanedInfo.includes(pattern))) {
+      return 'Open 24 hours';
+    }
+
+    // 기본 형식 반환
+    return '';
+  }
+
+  extractTimeForFood(timeRange) {
+    timeRange = timeRange.replace(/[\u2013\u2014\u2015\u2212]/g, '-');
+
+    if (this.normalizeOpenCloseTime(timeRange) !== timeRange) {
+      return this.normalizeOpenCloseTime(timeRange);
+    } else {
+      if (this.normalizeAMPMTime(timeRange) !== timeRange) {
+        return this.normalizeAMPMTime(timeRange);
+      } else {
+        if (this.normalizeSlashTime(timeRange) !== timeRange) {
+          return this.normalizeSlashTime(timeRange);
+        } else {
+          if (this.normalizeAMPMDotTime(timeRange) !== timeRange) {
+            return this.normalizeAMPMDotTime(timeRange);
+          } else {
+            if (this.normalizeDashTime(timeRange) !== timeRange) {
+              return this.normalizeDashTime(timeRange);
+            }
+          }
+        }
+      }
+    }
+
+    // "Open 24 hours"로 변환할 패턴
+    const alwaysOpenPatterns = ['24hours', 'Open 24 hours', '24 hours'];
+
+    // "Open 24 hours"로 변환
+    if (alwaysOpenPatterns.some((pattern) => timeRange.includes(pattern))) {
+      return 'Open 24 hours';
+    }
+
+    const excludePatterns = [
+      'Refer to the website for operating hours',
+      'until sold out',
+      'until supplies last',
+    ];
+
+    excludePatterns.forEach((pattern) => {
+      const regex = new RegExp(pattern, 'gi');
+      timeRange = timeRange.replace(regex, '');
+    });
+
+    return timeRange;
+  }
+
+  normalizeOpenCloseTime(timeRange) {
+    let cleanedTime = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    // 기본적인 시간 형식 변환
+    let openCloseMatch = cleanedTime.match(
+      /open\s*(\d{1,2}[:：]\d{2})\s*\/\s*closed\s*(\d{1,2}[:：]\d{2})/,
+    );
+    let breakTimeMatch = cleanedTime.match(
+      /break\s*time\s*(\d{1,2}[:：]\d{2})\s*~\s*(\d{1,2}[:：]\d{2})/,
+    );
+
+    if (openCloseMatch) {
+      let openTime = openCloseMatch[1].replace('：', ':').padStart(5, '0');
+      let closeTime = openCloseMatch[2].replace('：', ':').padStart(5, '0');
+      let result = `${openTime}-${closeTime}`;
+
+      if (breakTimeMatch) {
+        let breakStart = breakTimeMatch[1].replace('：', ':').padStart(5, '0');
+        let breakEnd = breakTimeMatch[2].replace('：', ':').padStart(5, '0');
+        result += ` (break time ${breakStart}-${breakEnd})`;
+      }
+
+      return result;
+    }
+
+    return timeRange; // 변환할 수 없는 경우 원본 반환
+  }
+
+  normalizeAMPMTime(timeRange) {
+    let cleanedTime = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    // 기본적인 시간 형식 변환
+    let openCloseMatch = cleanedTime.match(
+      /(am|pm)\s*(\d{1,2}[:：]\d{2})\s*[-–~]\s*(am|pm)\s*(\d{1,2}[:：]\d{2})/,
+    );
+    let breakTimeMatch = cleanedTime.match(
+      /break\s*time\s*(\d{1,2}[:：]\d{2})\s*[-–~]\s*(\d{1,2}[:：]\d{2})/,
+    );
+
+    if (openCloseMatch) {
+      let openPeriod = openCloseMatch[1];
+      let openTime = openCloseMatch[2].replace('：', ':').padStart(5, '0');
+      let closePeriod = openCloseMatch[3];
+      let closeTime = openCloseMatch[4].replace('：', ':').padStart(5, '0');
+
+      let result = `${openTime}-${closeTime}`;
+
+      if (breakTimeMatch) {
+        let breakStart = breakTimeMatch[1].replace('：', ':').padStart(5, '0');
+        let breakEnd = breakTimeMatch[2].replace('：', ':').padStart(5, '0');
+        result += ` (break time ${breakStart}-${breakEnd})`;
+      }
+
+      return result;
+    }
+    return timeRange;
+  }
+
+  normalizeAMPMDotTime(timeRange) {
+    let cleanedTime = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    // 기본적인 시간 형식 변환
+    let openCloseMatch = cleanedTime.match(
+      /(\d{1,2}[:：]\d{2})(a.m.|p.m.)[~-](\d{1,2}[:：]\d{2})(a.m.|p.m.)/,
+    );
+    let breakTimeMatch = cleanedTime.match(
+      /break\s*time\s*(\d{1,2}[:：]\d{2})\s*[-–~]\s*(\d{1,2}[:：]\d{2})/,
+    );
+
+    if (openCloseMatch) {
+      let openTime = openCloseMatch[1].replace('：', ':').padStart(5, '0');
+      let openPeriod = openCloseMatch[2];
+      let closeTime = openCloseMatch[3].replace('：', ':').padStart(5, '0');
+      let closePeriod = openCloseMatch[4];
+
+      let result = `${openTime}-${closeTime}`;
+
+      if (breakTimeMatch) {
+        let breakStart = breakTimeMatch[1].replace('：', ':').padStart(5, '0');
+        let breakEnd = breakTimeMatch[2].replace('：', ':').padStart(5, '0');
+        result += ` (break time ${breakStart}-${breakEnd})`;
+      }
+
+      return result;
+    }
+    return timeRange;
+  }
+
+  normalizeSlashTime(timeRange) {
+    let cleanedTime = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    // 기본적인 시간 형식 변환
+    let openCloseMatch = cleanedTime.match(
+      /(\d{1,2}[:：]\d{2})\s*[-–~]\s*(\d{1,2}[:：]\d{2})\s*\/\s*(\d{1,2}[:：]\d{2})\s*[-–~]\s*(\d{1,2}[:：]\d{2})/,
+    );
+
+    if (openCloseMatch) {
+      let openTime = openCloseMatch[1].replace('：', ':').padStart(5, '0');
+      let breakStart = openCloseMatch[2].replace('：', ':').padStart(5, '0');
+      let breakEnd = openCloseMatch[3].replace('：', ':').padStart(5, '0');
+      let closeTime = openCloseMatch[4].replace('：', ':').padStart(5, '0');
+
+      let result = `${openTime}-${closeTime} (break time ${breakStart}-${breakEnd})`;
+      return result;
+    }
+    return timeRange;
+  }
+
+  normalizeDashTime(timeRange) {
+    let cleanedTime = timeRange.replace(/\s+/g, '').toLowerCase();
+
+    const timeMatch = cleanedTime.match(
+      /(\d{1,2}[:]\d{2})[-–~](\d{1,2}[:]\d{2})/,
+    );
+
+    if (timeMatch) {
+      // 시간을 'HH:MM' 형식으로 맞춤
+      let startTime = timeMatch[1].padStart(5, '0');
+      let endTime = timeMatch[2].padStart(5, '0');
+
+      // '10:00-20:00' 형식으로 반환
+      return `${startTime}-${endTime}`;
+    }
+
+    return timeRange;
+  }
+
+  normalizeParkingInfo(parkingInfo) {
+    const infoLower = parkingInfo.replace(/\s+/g, '').toLowerCase();
+
+    if (
+      infoLower.includes('notavailable') ||
+      infoLower.includes('no') ||
+      infoLower.includes('not')
+    ) {
+      return 'Not available';
+    }
+
+    if (
+      infoLower.includes('available') ||
+      infoLower.includes('yes') ||
+      infoLower.includes('parking')
+    ) {
+      return 'Available';
+    }
+
+    return parkingInfo;
+  }
+
+  normalizePhoneNumber(phoneNumber) {
+    let cleanedNumber = phoneNumber.replace(/(\+82\-|\+82\s|82\)\+)/g, '0');
+
+    cleanedNumber = cleanedNumber.replace(/(\+52\-|52\)\+)/g, '0');
+
+    cleanedNumber = cleanedNumber.replace(/~\d+/g, '');
+
+    cleanedNumber = cleanedNumber.replace(/\s+/g, '');
+
+    const phoneMatch = cleanedNumber.match(/(0\d{2,3})-(\d{3,4})-(\d{4})/);
+
+    if (phoneMatch) {
+      return `${phoneMatch[1]}-${phoneMatch[2]}-${phoneMatch[3]}`;
+    }
+
+    return '';
   }
 }

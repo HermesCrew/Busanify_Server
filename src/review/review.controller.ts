@@ -29,7 +29,7 @@ export class ReviewController {
   })
   async createReview(
     @User() user,
-    @Body('placeId') placeId: number,
+    @Body('placeId') placeId: string,
     @Body('rating') rating: number,
     @Body('content') content: string,
     @Body('photos') photos: string[],
@@ -97,7 +97,7 @@ export class ReviewController {
   @ApiOperation({
     summary: '장소 리뷰 조회',
   })
-  async getReviewsByPlace(@Param('placeId') placeId: number): Promise<any> {
+  async getReviewsByPlace(@Param('placeId') placeId: string): Promise<any> {
     return await this.reviewService.getReviewsByPlace(placeId);
   }
 }
