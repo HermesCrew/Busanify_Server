@@ -41,6 +41,10 @@ export class UserEntity extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date;
 
+  @Column({ nullable: true })
+  // @Exclude({ toPlainOnly: true })
+  refreshToken: string;
+
   @OneToMany(() => BookmarkEntity, (bookmark) => bookmark.user)
   bookmarks: BookmarkEntity[];
 

@@ -235,15 +235,15 @@ export class OpenAPIService {
           if (!existingPlace79) {
             const place79 = this.placeRepository.create({
               id: id79,
-              titleEng: dataEng[i].title,
-              titleJpn: dataJpn[i].title,
-              titleChs: dataChs[i].title,
-              titleCht: dataCht[i].title,
+              titleEng: this.replaceNewlineWithSpace(dataEng[i].title),
+              titleJpn: this.replaceNewlineWithSpace(dataJpn[i].title),
+              titleChs: this.replaceNewlineWithSpace(dataChs[i].title),
+              titleCht: this.replaceNewlineWithSpace(dataCht[i].title),
               typeId: dataEng[i].contenttypeid,
-              addressEng: dataEng[i].addr1,
-              addressJpn: dataJpn[i].addr1,
-              addressChs: dataChs[i].addr1,
-              addressCht: dataCht[i].addr1,
+              addressEng: this.replaceNewlineWithSpace(dataEng[i].addr1),
+              addressJpn: this.replaceNewlineWithSpace(dataJpn[i].addr1),
+              addressChs: this.replaceNewlineWithSpace(dataChs[i].addr1),
+              addressCht: this.replaceNewlineWithSpace(dataCht[i].addr1),
               image: dataEng[i].firstimage,
               lat: Number(dataEng[i].mapy),
               lng: Number(dataEng[i].mapx),
@@ -261,10 +261,18 @@ export class OpenAPIService {
                 detailDataEng[0].opentime,
               ),
 
-              holidayEng: detailDataEng[0].restdateshopping,
-              holidayJpn: detailDataJpn[0].restdateshopping,
-              holidayChs: detailDataChs[0].restdateshopping,
-              holidayCht: detailDataCht[0].restdateshopping,
+              holidayEng: this.replaceNewlineWithSpace(
+                detailDataEng[0].restdateshopping,
+              ),
+              holidayJpn: this.replaceNewlineWithSpace(
+                detailDataJpn[0].restdateshopping,
+              ),
+              holidayChs: this.replaceNewlineWithSpace(
+                detailDataChs[0].restdateshopping,
+              ),
+              holidayCht: this.replaceNewlineWithSpace(
+                detailDataCht[0].restdateshopping,
+              ),
 
               parkingEng: this.normalizeParkingInfo(
                 detailDataEng[0].parkingshopping,
@@ -287,21 +295,45 @@ export class OpenAPIService {
 
               restroom: detailDataEng[0].restroom.includes('Available'),
 
-              shopguideEng: detailDataEng[0].shopguide,
-              shopguideJpn: detailDataJpn[0].shopguide,
-              shopguideChs: detailDataChs[0].shopguide,
-              shopguideCht: detailDataCht[0].shopguide,
+              shopguideEng: this.replaceNewlineWithSpace(
+                detailDataEng[0].shopguide,
+              ),
+              shopguideJpn: this.replaceNewlineWithSpace(
+                detailDataJpn[0].shopguide,
+              ),
+              shopguideChs: this.replaceNewlineWithSpace(
+                detailDataChs[0].shopguide,
+              ),
+              shopguideCht: this.replaceNewlineWithSpace(
+                detailDataCht[0].shopguide,
+              ),
             });
             await this.placeRepository.save(place79);
           } else {
-            (existingPlace79.titleEng = dataEng[i].title),
-              (existingPlace79.titleJpn = dataJpn[i].title),
-              (existingPlace79.titleChs = dataChs[i].title),
-              (existingPlace79.titleCht = dataCht[i].title),
-              (existingPlace79.addressEng = dataEng[i].addr1),
-              (existingPlace79.addressJpn = dataJpn[i].addr1),
-              (existingPlace79.addressChs = dataChs[i].addr1),
-              (existingPlace79.addressCht = dataCht[i].addr1),
+            (existingPlace79.titleEng = this.replaceNewlineWithSpace(
+              dataEng[i].title,
+            )),
+              (existingPlace79.titleJpn = this.replaceNewlineWithSpace(
+                dataJpn[i].title,
+              )),
+              (existingPlace79.titleChs = this.replaceNewlineWithSpace(
+                dataChs[i].title,
+              )),
+              (existingPlace79.titleCht = this.replaceNewlineWithSpace(
+                dataCht[i].title,
+              )),
+              (existingPlace79.addressEng = this.replaceNewlineWithSpace(
+                dataEng[i].addr1,
+              )),
+              (existingPlace79.addressJpn = this.replaceNewlineWithSpace(
+                dataJpn[i].addr1,
+              )),
+              (existingPlace79.addressChs = this.replaceNewlineWithSpace(
+                dataChs[i].addr1,
+              )),
+              (existingPlace79.addressCht = this.replaceNewlineWithSpace(
+                dataCht[i].addr1,
+              )),
               (existingPlace79.image = dataEng[i].firstimage),
               (existingPlace79.lat = Number(dataEng[i].mapy)),
               (existingPlace79.lng = Number(dataEng[i].mapx)),
@@ -318,10 +350,18 @@ export class OpenAPIService {
               (existingPlace79.openTimeCht = this.extractTimeForShopping(
                 detailDataEng[0].opentime,
               )),
-              (existingPlace79.holidayEng = detailDataEng[0].restdateshopping),
-              (existingPlace79.holidayJpn = detailDataJpn[0].restdateshopping),
-              (existingPlace79.holidayChs = detailDataChs[0].restdateshopping),
-              (existingPlace79.holidayCht = detailDataCht[0].restdateshopping),
+              (existingPlace79.holidayEng = this.replaceNewlineWithSpace(
+                detailDataEng[0].restdateshopping,
+              )),
+              (existingPlace79.holidayJpn = this.replaceNewlineWithSpace(
+                detailDataJpn[0].restdateshopping,
+              )),
+              (existingPlace79.holidayChs = this.replaceNewlineWithSpace(
+                detailDataChs[0].restdateshopping,
+              )),
+              (existingPlace79.holidayCht = this.replaceNewlineWithSpace(
+                detailDataCht[0].restdateshopping,
+              )),
               (existingPlace79.parkingEng = this.normalizeParkingInfo(
                 detailDataEng[0].parkingshopping,
               )),
@@ -342,10 +382,18 @@ export class OpenAPIService {
                   : '無'),
               (existingPlace79.restroom =
                 detailDataEng[0].restroom.includes('Available')),
-              (existingPlace79.shopguideEng = detailDataEng[0].shopguide),
-              (existingPlace79.shopguideJpn = detailDataJpn[0].shopguide),
-              (existingPlace79.shopguideChs = detailDataChs[0].shopguide),
-              (existingPlace79.shopguideCht = detailDataCht[0].shopguide),
+              (existingPlace79.shopguideEng = this.replaceNewlineWithSpace(
+                detailDataEng[0].shopguide,
+              )),
+              (existingPlace79.shopguideJpn = this.replaceNewlineWithSpace(
+                detailDataJpn[0].shopguide,
+              )),
+              (existingPlace79.shopguideChs = this.replaceNewlineWithSpace(
+                detailDataChs[0].shopguide,
+              )),
+              (existingPlace79.shopguideCht = this.replaceNewlineWithSpace(
+                detailDataCht[0].shopguide,
+              )),
               await this.placeRepository.save(existingPlace79);
           }
           break;
@@ -360,15 +408,15 @@ export class OpenAPIService {
           if (!existingPlace80) {
             const place80 = this.placeRepository.create({
               id: id80,
-              titleEng: dataEng[i].title,
-              titleJpn: dataJpn[i].title,
-              titleChs: dataChs[i].title,
-              titleCht: dataCht[i].title,
+              titleEng: this.replaceNewlineWithSpace(dataEng[i].title),
+              titleJpn: this.replaceNewlineWithSpace(dataJpn[i].title),
+              titleChs: this.replaceNewlineWithSpace(dataChs[i].title),
+              titleCht: this.replaceNewlineWithSpace(dataCht[i].title),
               typeId: dataEng[i].contenttypeid,
-              addressEng: dataEng[i].addr1,
-              addressJpn: dataJpn[i].addr1,
-              addressChs: dataChs[i].addr1,
-              addressCht: dataCht[i].addr1,
+              addressEng: this.replaceNewlineWithSpace(dataEng[i].addr1),
+              addressJpn: this.replaceNewlineWithSpace(dataJpn[i].addr1),
+              addressChs: this.replaceNewlineWithSpace(dataChs[i].addr1),
+              addressCht: this.replaceNewlineWithSpace(dataCht[i].addr1),
               image: dataEng[i].firstimage,
               lat: Number(dataEng[i].mapy),
               lng: Number(dataEng[i].mapx),
@@ -425,14 +473,30 @@ export class OpenAPIService {
             });
             await this.placeRepository.save(place80);
           } else {
-            (existingPlace80.titleEng = dataEng[i].title),
-              (existingPlace80.titleJpn = dataJpn[i].title),
-              (existingPlace80.titleChs = dataChs[i].title),
-              (existingPlace80.titleCht = dataCht[i].title),
-              (existingPlace80.addressEng = dataEng[i].addr1),
-              (existingPlace80.addressJpn = dataJpn[i].addr1),
-              (existingPlace80.addressChs = dataChs[i].addr1),
-              (existingPlace80.addressCht = dataCht[i].addr1),
+            (existingPlace80.titleEng = this.replaceNewlineWithSpace(
+              dataEng[i].title,
+            )),
+              (existingPlace80.titleJpn = this.replaceNewlineWithSpace(
+                dataJpn[i].title,
+              )),
+              (existingPlace80.titleChs = this.replaceNewlineWithSpace(
+                dataChs[i].title,
+              )),
+              (existingPlace80.titleCht = this.replaceNewlineWithSpace(
+                dataCht[i].title,
+              )),
+              (existingPlace80.addressEng = this.replaceNewlineWithSpace(
+                dataEng[i].addr1,
+              )),
+              (existingPlace80.addressJpn = this.replaceNewlineWithSpace(
+                dataJpn[i].addr1,
+              )),
+              (existingPlace80.addressChs = this.replaceNewlineWithSpace(
+                dataChs[i].addr1,
+              )),
+              (existingPlace80.addressCht = this.replaceNewlineWithSpace(
+                dataCht[i].addr1,
+              )),
               (existingPlace80.image = dataEng[i].firstimage),
               (existingPlace80.lat = Number(dataEng[i].mapy)),
               (existingPlace80.lng = Number(dataEng[i].mapx)),
@@ -578,15 +642,15 @@ export class OpenAPIService {
       if (!existingPlace) {
         const place = this.placeRepository.create({
           id: id,
-          titleEng: dataEng[i].PLACE,
-          titleJpn: dataJpn[i].PLACE,
-          titleChs: dataChs[i].PLACE,
-          titleCht: dataCht[i].PLACE,
+          titleEng: this.replaceNewlineWithSpace(dataEng[i].PLACE),
+          titleJpn: this.replaceNewlineWithSpace(dataJpn[i].PLACE),
+          titleChs: this.replaceNewlineWithSpace(dataChs[i].PLACE),
+          titleCht: this.replaceNewlineWithSpace(dataCht[i].PLACE),
           typeId: '76',
-          addressEng: dataEng[i].ADDR1,
-          addressJpn: dataJpn[i].ADDR1,
-          addressChs: dataChs[i].ADDR1,
-          addressCht: dataCht[i].ADDR1,
+          addressEng: this.replaceNewlineWithSpace(dataEng[i].ADDR1),
+          addressJpn: this.replaceNewlineWithSpace(dataJpn[i].ADDR1),
+          addressChs: this.replaceNewlineWithSpace(dataChs[i].ADDR1),
+          addressCht: this.replaceNewlineWithSpace(dataCht[i].ADDR1),
           image: dataEng[i].MAIN_IMG_NORMAL,
           lat: Number(dataEng[i].LAT),
           lng: Number(dataEng[i].LNG),
@@ -615,26 +679,34 @@ export class OpenAPIService {
           parkingJpn: dataEng[i].TRFC_INFO.includes(':') ? 'あり' : 'なし',
           parkingChs: dataEng[i].TRFC_INFO.includes(':') ? '可' : '不可',
           parkingCht: dataEng[i].TRFC_INFO.includes(':') ? '有' : '無',
-          holidayEng: dataEng[i].HLDY_INFO,
-          holidayJpn: dataJpn[i].HLDY_INFO,
-          holidayChs: dataChs[i].HLDY_INFO,
-          holidayCht: dataCht[i].HLDY_INFO,
-          feeEng: dataEng[i].USAGE_AMOUNT,
-          feeJpn: dataJpn[i].USAGE_AMOUNT,
-          feeChs: dataChs[i].USAGE_AMOUNT,
-          feeCht: dataCht[i].USAGE_AMOUNT,
+          holidayEng: this.replaceNewlineWithSpace(dataEng[i].HLDY_INFO),
+          holidayJpn: this.replaceNewlineWithSpace(dataJpn[i].HLDY_INFO),
+          holidayChs: this.replaceNewlineWithSpace(dataChs[i].HLDY_INFO),
+          holidayCht: this.replaceNewlineWithSpace(dataCht[i].HLDY_INFO),
+          feeEng: this.replaceNewlineWithSpace(dataEng[i].USAGE_AMOUNT),
+          feeJpn: this.replaceNewlineWithSpace(dataJpn[i].USAGE_AMOUNT),
+          feeChs: this.replaceNewlineWithSpace(dataChs[i].USAGE_AMOUNT),
+          feeCht: this.replaceNewlineWithSpace(dataCht[i].USAGE_AMOUNT),
         });
 
         await this.placeRepository.save(place);
       } else {
-        existingPlace.titleEng = dataEng[i].PLACE;
-        existingPlace.titleJpn = dataJpn[i].PLACE;
-        existingPlace.titleChs = dataChs[i].PLACE;
-        existingPlace.titleCht = dataCht[i].PLACE;
-        existingPlace.addressEng = dataEng[i].ADDR1;
-        existingPlace.addressJpn = dataJpn[i].ADDR1;
-        existingPlace.addressChs = dataChs[i].ADDR1;
-        existingPlace.addressCht = dataCht[i].ADDR1;
+        existingPlace.titleEng = this.replaceNewlineWithSpace(dataEng[i].PLACE);
+        existingPlace.titleJpn = this.replaceNewlineWithSpace(dataJpn[i].PLACE);
+        existingPlace.titleChs = this.replaceNewlineWithSpace(dataChs[i].PLACE);
+        existingPlace.titleCht = this.replaceNewlineWithSpace(dataCht[i].PLACE);
+        existingPlace.addressEng = this.replaceNewlineWithSpace(
+          dataEng[i].ADDR1,
+        );
+        existingPlace.addressJpn = this.replaceNewlineWithSpace(
+          dataJpn[i].ADDR1,
+        );
+        existingPlace.addressChs = this.replaceNewlineWithSpace(
+          dataChs[i].ADDR1,
+        );
+        existingPlace.addressCht = this.replaceNewlineWithSpace(
+          dataCht[i].ADDR1,
+        );
         existingPlace.image = dataEng[i].MAIN_IMG_NORMAL;
         existingPlace.lat = Number(dataEng[i].LAT);
         existingPlace.lng = Number(dataEng[i].LNG);
@@ -669,15 +741,30 @@ export class OpenAPIService {
         existingPlace.parkingCht = dataEng[i].TRFC_INFO.includes(':')
           ? '有'
           : '無';
-        existingPlace.holidayEng = dataEng[i].HLDY_INFO;
-        existingPlace.holidayJpn = dataJpn[i].HLDY_INFO;
-        existingPlace.holidayChs = dataChs[i].HLDY_INFO;
-        existingPlace.holidayCht = dataCht[i].HLDY_INFO;
-        existingPlace.feeEng = dataEng[i].USAGE_AMOUNT;
-        existingPlace.feeJpn = dataJpn[i].USAGE_AMOUNT;
-        existingPlace.feeChs = dataChs[i].USAGE_AMOUNT;
-        existingPlace.feeCht = dataCht[i].USAGE_AMOUNT;
-
+        existingPlace.holidayEng = this.replaceNewlineWithSpace(
+          dataEng[i].HLDY_INFO,
+        );
+        existingPlace.holidayJpn = this.replaceNewlineWithSpace(
+          dataJpn[i].HLDY_INFO,
+        );
+        existingPlace.holidayChs = this.replaceNewlineWithSpace(
+          dataChs[i].HLDY_INFO,
+        );
+        existingPlace.holidayCht = this.replaceNewlineWithSpace(
+          dataCht[i].HLDY_INFO,
+        );
+        existingPlace.feeEng = this.replaceNewlineWithSpace(
+          dataEng[i].USAGE_AMOUNT,
+        );
+        existingPlace.feeJpn = this.replaceNewlineWithSpace(
+          dataJpn[i].USAGE_AMOUNT,
+        );
+        existingPlace.feeChs = this.replaceNewlineWithSpace(
+          dataChs[i].USAGE_AMOUNT,
+        );
+        existingPlace.feeCht = this.replaceNewlineWithSpace(
+          dataCht[i].USAGE_AMOUNT,
+        );
         await this.placeRepository.save(existingPlace);
       }
     }
@@ -755,15 +842,15 @@ export class OpenAPIService {
       if (!existingPlace) {
         const place = this.placeRepository.create({
           id: id,
-          titleEng: dataEng[i].TITLE,
-          titleJpn: dataJpn[i].TITLE,
-          titleChs: dataChs[i].TITLE,
-          titleCht: dataCht[i].TITLE,
+          titleEng: this.replaceNewlineWithSpace(dataEng[i].TITLE),
+          titleJpn: this.replaceNewlineWithSpace(dataJpn[i].TITLE),
+          titleChs: this.replaceNewlineWithSpace(dataChs[i].TITLE),
+          titleCht: this.replaceNewlineWithSpace(dataCht[i].TITLE),
           typeId: '82',
-          addressEng: dataEng[i].ADDR1,
-          addressJpn: dataJpn[i].ADDR1,
-          addressChs: dataChs[i].ADDR1,
-          addressCht: dataCht[i].ADDR1,
+          addressEng: this.replaceNewlineWithSpace(dataEng[i].ADDR1),
+          addressJpn: this.replaceNewlineWithSpace(dataJpn[i].ADDR1),
+          addressChs: this.replaceNewlineWithSpace(dataChs[i].ADDR1),
+          addressCht: this.replaceNewlineWithSpace(dataCht[i].ADDR1),
           image: dataEng[i].MAIN_IMG_NORMAL,
           lat: Number(dataEng[i].LAT),
           lng: Number(dataEng[i].LNG),
@@ -786,23 +873,31 @@ export class OpenAPIService {
             'Open 24 hours'
               ? '24 小時營業'
               : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME),
-          menuEng: dataEng[i].RPRSNTV_MENU,
-          menuJpn: dataJpn[i].RPRSNTV_MENU,
-          menuChs: dataChs[i].RPRSNTV_MENU,
-          menuCht: dataCht[i].RPRSNTV_MENU,
+          menuEng: this.replaceNewlineWithSpace(dataEng[i].RPRSNTV_MENU),
+          menuJpn: this.replaceNewlineWithSpace(dataJpn[i].RPRSNTV_MENU),
+          menuChs: this.replaceNewlineWithSpace(dataChs[i].RPRSNTV_MENU),
+          menuCht: this.replaceNewlineWithSpace(dataCht[i].RPRSNTV_MENU),
         });
 
         await this.placeRepository.save(place);
       } else {
-        existingPlace.titleEng = dataEng[i].TITLE;
-        existingPlace.titleJpn = dataJpn[i].TITLE;
-        existingPlace.titleChs = dataChs[i].TITLE;
-        existingPlace.titleCht = dataCht[i].TITLE;
+        existingPlace.titleEng = this.replaceNewlineWithSpace(dataEng[i].TITLE);
+        existingPlace.titleJpn = this.replaceNewlineWithSpace(dataJpn[i].TITLE);
+        existingPlace.titleChs = this.replaceNewlineWithSpace(dataChs[i].TITLE);
+        existingPlace.titleCht = this.replaceNewlineWithSpace(dataCht[i].TITLE);
         existingPlace.typeId = '82';
-        existingPlace.addressEng = dataEng[i].ADDR1;
-        existingPlace.addressJpn = dataJpn[i].ADDR1;
-        existingPlace.addressChs = dataChs[i].ADDR1;
-        existingPlace.addressCht = dataCht[i].ADDR1;
+        existingPlace.addressEng = this.replaceNewlineWithSpace(
+          dataEng[i].ADDR1,
+        );
+        existingPlace.addressJpn = this.replaceNewlineWithSpace(
+          dataJpn[i].ADDR1,
+        );
+        existingPlace.addressChs = this.replaceNewlineWithSpace(
+          dataChs[i].ADDR1,
+        );
+        existingPlace.addressCht = this.replaceNewlineWithSpace(
+          dataCht[i].ADDR1,
+        );
         existingPlace.image = dataEng[i].MAIN_IMG_NORMAL;
         existingPlace.lat = Number(dataEng[i].LAT);
         existingPlace.lng = Number(dataEng[i].LNG);
@@ -825,10 +920,18 @@ export class OpenAPIService {
           'Open 24 hours'
             ? '24 小時營業'
             : this.extractTimeForFood(dataEng[i].USAGE_DAY_WEEK_AND_TIME);
-        existingPlace.menuEng = dataEng[i].RPRSNTV_MENU;
-        existingPlace.menuJpn = dataJpn[i].RPRSNTV_MENU;
-        existingPlace.menuChs = dataChs[i].RPRSNTV_MENU;
-        existingPlace.menuCht = dataCht[i].RPRSNTV_MENU;
+        existingPlace.menuEng = this.replaceNewlineWithSpace(
+          dataEng[i].RPRSNTV_MENU,
+        );
+        existingPlace.menuJpn = this.replaceNewlineWithSpace(
+          dataJpn[i].RPRSNTV_MENU,
+        );
+        existingPlace.menuChs = this.replaceNewlineWithSpace(
+          dataChs[i].RPRSNTV_MENU,
+        );
+        existingPlace.menuCht = this.replaceNewlineWithSpace(
+          dataCht[i].RPRSNTV_MENU,
+        );
 
         await this.placeRepository.save(existingPlace);
       }
@@ -889,6 +992,10 @@ export class OpenAPIService {
     );
 
     return filteredArr;
+  }
+
+  replaceNewlineWithSpace(text: string): string {
+    return text.replace(/\n/g, ' ');
   }
 
   extractTime(openTime) {

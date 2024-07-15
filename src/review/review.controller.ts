@@ -11,8 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GoogleAuth } from 'google-auth-library';
-import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
+import { SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { ReviewEntity } from 'src/entities/review.entity';
 import { ReviewService } from './review.service';
@@ -22,7 +21,7 @@ import { ReviewService } from './review.service';
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Post()
   @ApiOperation({
     summary: '리뷰 저장',
@@ -51,7 +50,7 @@ export class ReviewController {
     return await this.reviewService.getReview(id);
   }
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Patch(':id')
   @ApiOperation({
     summary: '리뷰 업데이트',
@@ -72,7 +71,7 @@ export class ReviewController {
     );
   }
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Delete(':id')
   @ApiOperation({
     summary: '리뷰 삭제',
@@ -84,7 +83,7 @@ export class ReviewController {
     await this.reviewService.deleteReview(user.sub, id);
   }
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Get('user/list')
   @ApiOperation({
     summary: '사용자 리뷰 조회',

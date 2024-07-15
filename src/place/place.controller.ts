@@ -13,7 +13,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
+import { SocialAuthGuard, OptionalAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { PlaceService } from 'src/place/place.service';
 import { OpenAPIService } from './openapi.service';
@@ -50,7 +50,7 @@ export class PlaceController {
     this.openAPIService.saveFoodService();
   }
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get('searchByType')
   @ApiOperation({
     summary: '장소 타입으로 조회',
@@ -65,8 +65,9 @@ export class PlaceController {
     @Query('lng') lng: number,
     @Query('radius') radius: number,
   ) {
+    const userId = user ? user.sub : null;
     return await this.placeService.findByType(
-      user.sub,
+      userId,
       typeId,
       lang,
       lat,
@@ -75,30 +76,7 @@ export class PlaceController {
     );
   }
 
-  @Get('searchByTypeNoUser')
-  @ApiOperation({
-    summary: '장소 타입으로 조회',
-    description:
-      'typeId(관광지: 76, 쇼핑: 79, 숙박: 80, 음식점: 82)\n lang(eng, jpn, chs, cht)\n lat: 사용자 위도, lng: 사용자 경도, radius: 반경',
-  })
-  async readByTypeWhenNoUser(
-    @Query('typeId') typeId: string,
-    @Query('lang') lang: string,
-    @Query('lat') lat: number,
-    @Query('lng') lng: number,
-    @Query('radius') radius: number,
-  ) {
-    return await this.placeService.findByType(
-      null,
-      typeId,
-      lang,
-      lat,
-      lng,
-      radius,
-    );
-  }
-
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get('searchByTitle')
   @ApiOperation({
     summary: '장소 이름으로 조회',
@@ -109,19 +87,8 @@ export class PlaceController {
     @Query('title') title: string,
     @Query('lang') lang: string,
   ) {
-    return await this.placeService.findByTitle(user.sub, lang, title);
-  }
-
-  @Get('searchByTitleNoUser')
-  @ApiOperation({
-    summary: '장소 이름으로 조회',
-    description: 'lang(eng, jpn, chs, cht)',
-  })
-  async readByTitleWhenNoUser(
-    @Query('title') title: string,
-    @Query('lang') lang: string,
-  ) {
-    return await this.placeService.findByTitle(null, lang, title);
+    const userId = user ? user.sub : null;
+    return await this.placeService.findByTitle(userId, lang, title);
   }
 
   @Get()

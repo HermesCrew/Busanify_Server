@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GoogleAuthGuard } from 'src/auth/google-auth.guard';
+import { SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { BookmarkEntity } from 'src/entities/bookmark.entity';
 import { BookmarkService } from './bookmark.service';
@@ -18,7 +18,7 @@ import { BookmarkService } from './bookmark.service';
 export class BookmarkController {
   constructor(private readonly bookmarkService: BookmarkService) {}
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Post('toggle')
   @ApiOperation({
     summary: '북마크/북마크 취소',
@@ -30,7 +30,7 @@ export class BookmarkController {
     return await this.bookmarkService.toggleBookmark(user.sub, placeId);
   }
 
-  @UseGuards(GoogleAuthGuard)
+  @UseGuards(SocialAuthGuard)
   @Get('user')
   @ApiOperation({
     summary: '사용자의 북마크 리스트 조회',

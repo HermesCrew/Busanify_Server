@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { PlaceEntity } from './place.entity';
 import { UserEntity } from './user.entity';
 
@@ -15,6 +21,9 @@ export class ReviewEntity {
 
   @Column({ type: 'json', nullable: true })
   photos: string[];
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => UserEntity, (user) => user.reviews)
   user: UserEntity;

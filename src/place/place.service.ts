@@ -217,9 +217,15 @@ export class PlaceService {
         { userId: userId },
       );
     }
-    return await queryBuilder
+    const results = await queryBuilder
       .where('place.titleEng LIKE :title', { title: `%${title}%` })
       .getRawMany();
+
+    return results.map((result) => ({
+      ...result,
+      avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
+      isBookmarked: Boolean(Number(result.isBookmarked)),
+    }));
   }
 
   async findByType(
@@ -377,7 +383,7 @@ export class PlaceService {
       );
     }
 
-    return await queryBuilder
+    const results = await queryBuilder
       .where('place.typeId = :typeId', { typeId: typeId })
       .andWhere(
         `ST_Distance_Sphere(
@@ -387,5 +393,11 @@ export class PlaceService {
         { lng, lat, radius },
       )
       .getRawMany();
+
+    return results.map((result) => ({
+      ...result,
+      avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
+      isBookmarked: Boolean(Number(result.isBookmarked)),
+    }));
   }
 }
