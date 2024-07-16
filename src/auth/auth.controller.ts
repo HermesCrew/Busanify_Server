@@ -30,8 +30,11 @@ export class AuthController {
   }
 
   @Post('apple/signin')
-  async appleSignIn(@Body('authorizationCode') authorizationCode: string) {
-    return this.authService.appleSignIn(authorizationCode, 'name');
+  async appleSignIn(
+    @Body('authorizationCode') authorizationCode: string,
+    @Body('username') username: string,
+  ) {
+    return this.authService.appleSignIn(authorizationCode, username);
   }
 
   @Get('apple/profile')

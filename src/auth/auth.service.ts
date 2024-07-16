@@ -149,14 +149,22 @@ export class AuthService {
 
       const userInfo = this.jwtService.decode(idToken);
 
-      await this.userRepository.save({
-        id: userInfo.sub,
-        email: userInfo.email,
-        name: userName,
-        profileImage: 'image',
-        provider: 'apple',
-        refreshToken: refreshToken,
+      let user = await this.userRepository.findOne({
+        where: { id: userInfo.sub },
       });
+
+      if (!user) {
+        user = this.userRepository.create({
+          id: userInfo.sub,
+          email: userInfo.email,
+          name: userName,
+          profileImage: 'image',
+          provider: 'apple',
+          refreshToken: refreshToken,
+        });
+      }
+
+      await this.userRepository.save(user);
 
       const newAccessToken = this.generateAccessToken(userInfo.sub);
       const newRefreshToken = this.generateRefreshToken();
@@ -184,6 +192,8 @@ export class AuthService {
   }
 
   async findById(userId: string): Promise<UserEntity> {
-    return await this.userRepository.findOne({ where: { id: userId } });
+    return await this.userRepository.findOne({
+      where: { id: userId },
+    });
   }
 }
