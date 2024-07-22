@@ -88,6 +88,7 @@ export class AuthService {
       algorithm: 'ES256',
       header,
     });
+
     return clientSecret;
   }
 

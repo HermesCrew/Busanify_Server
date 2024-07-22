@@ -91,12 +91,18 @@ export class PlaceController {
     return await this.placeService.findByTitle(userId, lang, title);
   }
 
+  @UseGuards(OptionalAuthGuard)
   @Get()
   @ApiOperation({
     summary: '장소 아이디로 조회',
     description: 'lang(eng, jpn, chs, cht)',
   })
-  async getById(@Query('id') id: string, @Query('lang') lang: string) {
-    return await this.placeService.findById(id, lang);
+  async getById(
+    @User() user,
+    @Query('id') id: string,
+    @Query('lang') lang: string,
+  ) {
+    const userId = user ? user.sub : null;
+    return await this.placeService.findById(userId, id, lang);
   }
 }

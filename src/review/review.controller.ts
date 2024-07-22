@@ -10,9 +10,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
+import { ReviewDto } from 'src/dto/review.dto';
 import { ReviewEntity } from 'src/entities/review.entity';
 import { ReviewService } from './review.service';
 
@@ -26,20 +27,12 @@ export class ReviewController {
   @ApiOperation({
     summary: '리뷰 저장',
   })
+  @ApiBody({ type: ReviewDto })
   async createReview(
     @User() user,
-    @Body('placeId') placeId: string,
-    @Body('rating') rating: number,
-    @Body('content') content: string,
-    @Body('photos') photos: string[],
+    @Body() reviewDto: ReviewDto,
   ): Promise<ReviewEntity> {
-    return await this.reviewService.createReview(
-      user.sub,
-      placeId,
-      rating,
-      content,
-      photos,
-    );
+    return await this.reviewService.createReview(user.sub, reviewDto);
   }
 
   @Get(':id')

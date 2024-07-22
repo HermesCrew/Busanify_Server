@@ -65,7 +65,10 @@ export class BookmarkService {
     return await this.bookmarkRepository.save(bookmark);
   }
 
-  async getBookmarksByUser(userId: string): Promise<PlaceEntity[]> {
+  async getBookmarksByUser(
+    userId: string,
+    lang: string,
+  ): Promise<PlaceEntity[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -74,13 +77,41 @@ export class BookmarkService {
       throw new Error('User not found');
     }
 
-    const bookmarks = await this.bookmarkRepository
+    const commonColumns = [
+      'place.id AS id',
+      'place.typeId AS typeId',
+      'place.image AS image',
+      'COALESCE(AVG(review.rating), 0) AS avgRating',
+      'COUNT(review.id) AS reviewCount',
+    ];
+    const langColumns: { [key: string]: string[] } = {
+      eng: ['place.titleEng AS title'],
+      jpn: ['place.titleJpn AS title'],
+      chs: ['place.titleChs AS title'],
+      cht: ['place.titleCht AS title'],
+    };
+
+    let selectedColumns = [...commonColumns];
+
+    if (langColumns[lang]) {
+      selectedColumns = [...selectedColumns, ...langColumns[lang]];
+    }
+
+    const results = await this.bookmarkRepository
       .createQueryBuilder('bookmark')
-      .leftJoinAndSelect('bookmark.place', 'place')
+      .leftJoin('bookmark.place', 'place')
+      .leftJoin('place.reviews', 'review')
+      .select(selectedColumns)
       .where('bookmark.user.id = :userId', { userId: user.id })
       .andWhere('bookmark.deleted = false')
-      .getMany();
+      .groupBy('place.id, bookmark.updatedAt')
+      .orderBy('bookmark.updatedAt', 'DESC')
+      .getRawMany();
 
-    return bookmarks.map((bookmark) => bookmark.place);
+    return results.map((result) => ({
+      ...result,
+      avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
+      reviewCount: parseInt(result.reviewCount),
+    }));
   }
 }

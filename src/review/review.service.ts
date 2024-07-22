@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ReviewDto } from 'src/dto/review.dto';
 import { PlaceEntity } from 'src/entities/place.entity';
 import { ReviewEntity } from 'src/entities/review.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -22,11 +23,10 @@ export class ReviewService {
 
   async createReview(
     userId: string,
-    placeId: string,
-    rating: number,
-    content: string,
-    photos: string[],
+    reviewDto: ReviewDto,
   ): Promise<ReviewEntity> {
+    const { placeId, rating, content, photos } = reviewDto;
+
     if (!userId) {
       throw new BadRequestException('userId is required');
     }

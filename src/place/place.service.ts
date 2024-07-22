@@ -12,7 +12,11 @@ export class PlaceService {
     private placeRepository: Repository<PlaceEntity>,
   ) {}
 
-  async findById(id: string, lang: string): Promise<PlaceEntity> {
+  async findById(
+    userId: string | null,
+    id: string,
+    lang: string,
+  ): Promise<PlaceEntity> {
     const place = await this.placeRepository.findOne({
       where: { id: id },
     });
@@ -145,11 +149,78 @@ export class PlaceService {
       ];
     }
 
-    return this.placeRepository
+    if (userId) {
+      selectedColumns.push('MAX(bookmark.id IS NOT NULL) AS isBookmarked');
+    } else {
+      selectedColumns.push(`false AS isBookmarked`);
+    }
+
+    selectedColumns.push(
+      'review.id AS reviewId',
+      'review.rating AS reviewRating',
+      'review.content AS reviewContent',
+      'review.photos AS reviewPhotos',
+      'review.createdAt AS reviewCreatedAt',
+      'user.name AS reviewUsername',
+    );
+
+    const avgRatingQuery = this.placeRepository
+      .createQueryBuilder('place')
+      .select([
+        'place.id AS id',
+        `COALESCE(AVG(review.rating), 0) AS avgRating`,
+      ])
+      .leftJoin('review', 'review', 'review.placeId = place.id')
+      .where('place.id = :id', { id: id })
+      .groupBy('place.id');
+
+    const avgRatingResult = await avgRatingQuery.getRawOne();
+
+    const queryBuilder = this.placeRepository
       .createQueryBuilder('place')
       .select(selectedColumns)
+      .leftJoin('review', 'review', 'review.placeId = place.id')
+      .leftJoin('user', 'user', 'review.userId = user.id')
+      .groupBy('place.id, review.id, user.id')
+      .orderBy('review.createdAt', 'DESC');
+
+    if (userId) {
+      queryBuilder.leftJoin(
+        'bookmark',
+        'bookmark',
+        'bookmark.placeId = place.id AND bookmark.userId = :userId AND bookmark.deleted = false',
+        { userId: userId },
+      );
+    }
+
+    const result = await queryBuilder
       .where('place.id = :id', { id: id })
-      .getRawOne();
+      .getRawMany();
+
+    const transformedResult = {
+      ...result[0],
+      avgRating: parseFloat(parseFloat(avgRatingResult.avgRating).toFixed(2)),
+      isBookmarked: Boolean(Number(result[0].isBookmarked)),
+      reviews: result[0]?.reviewId
+        ? result.map((r) => ({
+            id: r.reviewId,
+            rating: r.reviewRating,
+            content: r.reviewContent,
+            photos: r.reviewPhotos,
+            username: r.reviewUsername,
+            createdAt: r.reviewCreatedAt,
+          }))
+        : [],
+    };
+
+    delete transformedResult.reviewId;
+    delete transformedResult.reviewRating;
+    delete transformedResult.reviewContent;
+    delete transformedResult.reviewPhotos;
+    delete transformedResult.reviewUsername;
+    delete transformedResult.reviewCreatedAt;
+
+    return transformedResult;
   }
 
   // lat, long 으로 필터링 필요
