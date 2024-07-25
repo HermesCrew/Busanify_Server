@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ReviewForUserDto } from 'src/dto/place.review.dto';
 import { ReviewDto } from 'src/dto/review.dto';
 import { PlaceEntity } from 'src/entities/place.entity';
 import { ReviewEntity } from 'src/entities/review.entity';
@@ -21,10 +22,7 @@ export class ReviewService {
     private reviewRepository: Repository<ReviewEntity>,
   ) {}
 
-  async createReview(
-    userId: string,
-    reviewDto: ReviewDto,
-  ): Promise<ReviewEntity> {
+  async createReview(userId: string, reviewDto: ReviewDto): Promise<void> {
     const { placeId, rating, content, photos } = reviewDto;
 
     if (!userId) {
@@ -59,7 +57,7 @@ export class ReviewService {
       place,
     });
 
-    return await this.reviewRepository.save(review);
+    await this.reviewRepository.save(review);
   }
 
   async getReview(reviewId: number): Promise<ReviewEntity> {
@@ -123,7 +121,10 @@ export class ReviewService {
     await this.reviewRepository.delete(reviewId);
   }
 
-  async getReviewsByUser(userId: string): Promise<ReviewEntity[]> {
+  async getReviewsByUser(
+    userId: string,
+    lang: string,
+  ): Promise<ReviewForUserDto[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -132,11 +133,48 @@ export class ReviewService {
       throw new Error('User not found');
     }
 
-    return await this.reviewRepository
+    let selectedColumns = [
+      'review.id AS id',
+      'review.rating AS rating',
+      'review.content AS content',
+      'review.photos AS photos',
+      'review.createdAt AS createdAt',
+      'place.id AS placeId',
+      'place.image AS placeImage',
+    ];
+
+    const langColumns: { [key: string]: string[] } = {
+      eng: ['place.titleEng AS placeTitle'],
+      jpn: ['place.titleJpn AS placeTitle'],
+      chs: ['place.titleChs AS placeTitle'],
+      cht: ['place.titleCht AS placeTitle'],
+    };
+
+    if (langColumns[lang]) {
+      selectedColumns = [...selectedColumns, ...langColumns[lang]];
+    }
+
+    const results = await this.reviewRepository
       .createQueryBuilder('review')
-      .leftJoinAndSelect('review.place', 'place')
+      .leftJoin('review.place', 'place')
       .where('review.user.id = :userId', { userId: user.id })
-      .getMany();
+      .select(selectedColumns)
+      .getRawMany();
+
+    const transformedResult = results.map((result) => ({
+      id: result.id,
+      rating: result.rating,
+      content: result.content,
+      photos: result.photos,
+      createdAt: result.createdAt,
+      place: {
+        id: result.placeId,
+        image: result.placeImage,
+        title: result.placeTitle,
+      },
+    }));
+
+    return transformedResult;
   }
 
   async getReviewsByPlace(placeId: string): Promise<ReviewEntity[]> {
@@ -156,6 +194,16 @@ export class ReviewService {
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.user', 'user')
       .where('review.place.id = :placeId', { placeId: place.id })
+      .select([
+        'review.id',
+        'review.rating',
+        'review.content',
+        'review.photos',
+        'review.createdAt',
+        'user.id',
+        'user.name',
+        'user.profileImage',
+      ])
       .getMany();
   }
 }

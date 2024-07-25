@@ -31,8 +31,8 @@ export class ReviewController {
   async createReview(
     @User() user,
     @Body() reviewDto: ReviewDto,
-  ): Promise<ReviewEntity> {
-    return await this.reviewService.createReview(user.sub, reviewDto);
+  ): Promise<void> {
+    await this.reviewService.createReview(user.sub, reviewDto);
   }
 
   @Get(':id')
@@ -44,13 +44,13 @@ export class ReviewController {
   }
 
   @UseGuards(SocialAuthGuard)
-  @Patch(':id')
+  @Patch()
   @ApiOperation({
     summary: '리뷰 업데이트',
   })
   async updateReview(
     @User() user,
-    @Param('id', ParseIntPipe) id: number,
+    @Body('id') id: number,
     @Body('rating') rating: number,
     @Body('content') content: string,
     @Body('photos') photos: string[],
@@ -65,14 +65,11 @@ export class ReviewController {
   }
 
   @UseGuards(SocialAuthGuard)
-  @Delete(':id')
+  @Delete()
   @ApiOperation({
     summary: '리뷰 삭제',
   })
-  async deleteReview(
-    @User() user,
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<void> {
+  async deleteReview(@User() user, @Body('id') id: number): Promise<void> {
     await this.reviewService.deleteReview(user.sub, id);
   }
 
@@ -81,8 +78,11 @@ export class ReviewController {
   @ApiOperation({
     summary: '사용자 리뷰 조회',
   })
-  async getReviewsByUser(@User() user): Promise<any> {
-    return await this.reviewService.getReviewsByUser(user.sub);
+  async getReviewsByUser(
+    @User() user,
+    @Query('lang') lang: string,
+  ): Promise<any> {
+    return await this.reviewService.getReviewsByUser(user.sub, lang);
   }
 
   @Get('place/:placeId')

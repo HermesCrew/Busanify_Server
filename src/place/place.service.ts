@@ -161,7 +161,9 @@ export class PlaceService {
       'review.content AS reviewContent',
       'review.photos AS reviewPhotos',
       'review.createdAt AS reviewCreatedAt',
+      'user.id AS reviewUserId',
       'user.name AS reviewUsername',
+      'user.profileImage AS reviewUserProfileImage',
     );
 
     const avgRatingQuery = this.placeRepository
@@ -207,7 +209,11 @@ export class PlaceService {
             rating: r.reviewRating,
             content: r.reviewContent,
             photos: r.reviewPhotos,
-            username: r.reviewUsername,
+            user: {
+              id: r.reviewUserId,
+              name: r.reviewUsername,
+              profileImage: r.reviewUserProfileImage,
+            },
             createdAt: r.reviewCreatedAt,
           }))
         : [],
@@ -217,7 +223,9 @@ export class PlaceService {
     delete transformedResult.reviewRating;
     delete transformedResult.reviewContent;
     delete transformedResult.reviewPhotos;
+    delete transformedResult.reviewUserId;
     delete transformedResult.reviewUsername;
+    delete transformedResult.reviewUserProfileImage;
     delete transformedResult.reviewCreatedAt;
 
     return transformedResult;
@@ -237,6 +245,7 @@ export class PlaceService {
       'place.lng AS lng',
       'place.tel AS tel',
       `COALESCE(AVG(review.rating), 0) AS avgRating`,
+      'COUNT(review.id) AS reviewCount',
     ];
 
     const langColumns: { [key: string]: string[] } = {
@@ -296,6 +305,7 @@ export class PlaceService {
       ...result,
       avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
       isBookmarked: Boolean(Number(result.isBookmarked)),
+      reviewCount: parseInt(result.reviewCount),
     }));
   }
 
@@ -315,6 +325,7 @@ export class PlaceService {
       'place.lng AS lng',
       'place.tel AS tel',
       `COALESCE(AVG(review.rating), 0) AS avgRating`,
+      'COUNT(review.id) AS reviewCount',
     ];
 
     const langColumns: { [key: string]: string[] } = {
@@ -469,6 +480,7 @@ export class PlaceService {
       ...result,
       avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
       isBookmarked: Boolean(Number(result.isBookmarked)),
+      reviewCount: parseInt(result.reviewCount),
     }));
   }
 }
