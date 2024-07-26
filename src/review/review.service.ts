@@ -193,7 +193,6 @@ export class ReviewService {
     return await this.reviewRepository
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.user', 'user')
-      .where('review.place.id = :placeId', { placeId: place.id })
       .select([
         'review.id',
         'review.rating',
@@ -204,6 +203,8 @@ export class ReviewService {
         'user.name',
         'user.profileImage',
       ])
+      .where('review.place.id = :placeId', { placeId: place.id })
+      .orderBy('review.createdAt', 'DESC')
       .getMany();
   }
 }

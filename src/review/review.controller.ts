@@ -13,7 +13,11 @@ import {
 import { ApiBody, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
-import { ReviewDto } from 'src/dto/review.dto';
+import {
+  ReviewDeleteDto,
+  ReviewDto,
+  ReviewUpdateDto,
+} from 'src/dto/review.dto';
 import { ReviewEntity } from 'src/entities/review.entity';
 import { ReviewService } from './review.service';
 
@@ -46,8 +50,9 @@ export class ReviewController {
   @UseGuards(SocialAuthGuard)
   @Patch()
   @ApiOperation({
-    summary: '리뷰 업데이트',
+    summary: '리뷰 수정',
   })
+  @ApiBody({ type: ReviewUpdateDto })
   async updateReview(
     @User() user,
     @Body('id') id: number,
@@ -69,6 +74,7 @@ export class ReviewController {
   @ApiOperation({
     summary: '리뷰 삭제',
   })
+  @ApiBody({ type: ReviewDeleteDto })
   async deleteReview(@User() user, @Body('id') id: number): Promise<void> {
     await this.reviewService.deleteReview(user.sub, id);
   }
