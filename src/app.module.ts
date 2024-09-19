@@ -6,6 +6,7 @@ import { PlaceModule } from './place/place.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { HealthModule } from './health/health.module';
 import { ReviewModule } from './review/review.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ReviewModule } from './review/review.module';
     BookmarkModule,
     HealthModule,
     ReviewModule,
+    ReportModule,
   ],
 })
 export class AppModule {}
