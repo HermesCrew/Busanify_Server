@@ -7,6 +7,7 @@ import { BookmarkModule } from './bookmark/bookmark.module';
 import { HealthModule } from './health/health.module';
 import { ReviewModule } from './review/review.module';
 import { ReportModule } from './report/report.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ReportModule } from './report/report.module';
     HealthModule,
     ReviewModule,
     ReportModule,
+    PostModule,
   ],
 })
 export class AppModule {}

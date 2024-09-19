@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { BookmarkEntity } from './bookmark.entity';
+import { PostEntity } from './post.entity';
 import { ReviewEntity } from './review.entity';
 
 @Entity('user')
@@ -47,4 +48,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ReviewEntity, (review) => review.user)
   reviews: ReviewEntity[];
+
+  @OneToMany(() => PostEntity, (post) => post.user)
+  posts: PostEntity[];
 }
