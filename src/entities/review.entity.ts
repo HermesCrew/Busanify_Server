@@ -25,9 +25,13 @@ export class ReviewEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => UserEntity, (user) => user.reviews)
+  @ManyToOne(() => UserEntity, (user) => user.reviews, {
+    onDelete: 'CASCADE',
+  })
   user: UserEntity;
 
-  @ManyToOne(() => PlaceEntity, (place) => place.reviews)
+  @ManyToOne(() => PlaceEntity, (place) => place.reviews, {
+    onDelete: 'CASCADE',
+  })
   place: PlaceEntity;
 }

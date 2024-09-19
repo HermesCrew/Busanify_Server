@@ -5,6 +5,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Request,
@@ -40,7 +41,7 @@ export class AuthController {
   })
   @ApiBody({ type: GoogleLoginDto })
   async tokenSignIn(@Body('idToken') idToken: string) {
-    await this.authService.findOrCreate(idToken);
+    return await this.authService.findOrCreate(idToken);
   }
 
   @Post('apple/signin')
@@ -48,16 +49,51 @@ export class AuthController {
     summary: '애플 로그인',
   })
   @ApiBody({ type: AppleLoginDto })
-  async appleSignIn(
-    @Body('authorizationCode') authorizationCode: string,
-    @Body('username') username: string,
-  ) {
-    return this.authService.appleSignIn(authorizationCode, username);
+  async appleSignIn(@Body('authorizationCode') authorizationCode: string) {
+    return await this.authService.appleSignIn(authorizationCode);
   }
 
-  @Get('apple/profile')
+  @Get('profile')
   @UseGuards(SocialAuthGuard)
-  async getAppleProfile(@User() user) {
+  async getProfile(@User() user) {
     return await this.authService.findById(user.sub);
+  }
+
+  @Patch('updateProfile')
+  @UseGuards(SocialAuthGuard)
+  @ApiOperation({
+    summary: '프로필 업데이트',
+  })
+  async updateProfile(
+    @User() user,
+    @Body('profileImage') profileImage?: string,
+    @Body('nickname') nickname?: string,
+  ) {
+    return await this.authService.updateProfile(
+      user.sub,
+      profileImage,
+      nickname,
+    );
+  }
+
+  @Delete('googleDelete')
+  @UseGuards(SocialAuthGuard)
+  @ApiOperation({
+    summary: '구글 유저 삭제',
+  })
+  async deleteGoogleUser(@User() user) {
+    await this.authService.deleteUser(user.sub);
+  }
+
+  @Delete('appleDelete')
+  @UseGuards(SocialAuthGuard)
+  @ApiOperation({
+    summary: '애플유저 삭제',
+  })
+  async deleteAppleUser(@User() user, @Req() request) {
+    await this.authService.deleteUserAndRevokeApple(
+      user.sub,
+      request.headers['authorization']?.split('Bearer ')[1],
+    );
   }
 }

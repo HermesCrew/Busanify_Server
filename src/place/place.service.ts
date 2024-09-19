@@ -162,7 +162,7 @@ export class PlaceService {
       'review.photos AS reviewPhotos',
       'review.createdAt AS reviewCreatedAt',
       'user.id AS reviewUserId',
-      'user.name AS reviewUsername',
+      'user.nickname AS reviewUserNickname',
       'user.profileImage AS reviewUserProfileImage',
     );
 
@@ -211,7 +211,7 @@ export class PlaceService {
             photos: r.reviewPhotos,
             user: {
               id: r.reviewUserId,
-              name: r.reviewUsername,
+              nickname: r.reviewUserNickname,
               profileImage: r.reviewUserProfileImage,
             },
             createdAt: r.reviewCreatedAt,

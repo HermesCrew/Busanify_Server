@@ -2,6 +2,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -46,12 +47,13 @@ export class AuthService {
 
     let user = await this.userRepository.findOne({ where: { id } });
 
+    const nickname = await this.generateUniqueNickname();
+
     if (!user) {
       user = this.userRepository.create({
         id,
         email,
-        name,
-        profileImage,
+        nickname: nickname,
         provider: 'google',
       });
       await this.userRepository.save(user);
@@ -136,7 +138,7 @@ export class AuthService {
     );
   }
 
-  async appleSignIn(authorizationCode: string, userName: string) {
+  async appleSignIn(authorizationCode: string) {
     try {
       const clientSecret = this.createClientSecret();
       const tokenResult = await this.exchangeCodeToToken(
@@ -154,12 +156,13 @@ export class AuthService {
         where: { id: userInfo.sub },
       });
 
+      const nickname = await this.generateUniqueNickname();
+
       if (!user) {
         user = this.userRepository.create({
           id: userInfo.sub,
           email: userInfo.email,
-          name: userName,
-          profileImage: 'image',
+          nickname: nickname,
           provider: 'apple',
           refreshToken: refreshToken,
         });
@@ -196,5 +199,115 @@ export class AuthService {
     return await this.userRepository.findOne({
       where: { id: userId },
     });
+  }
+
+  async updateProfile(
+    userId: string,
+    profileImage?: string,
+    nickname?: string,
+  ): Promise<UserEntity> {
+    let user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (nickname) {
+      user.nickname = nickname;
+    }
+
+    user.profileImage = profileImage;
+
+    return await this.userRepository.save(user);
+  }
+
+  async generateUniqueNickname(): Promise<string> {
+    let nickname: string;
+    let isUnique: boolean = false;
+
+    while (!isUnique) {
+      nickname = this.generateRandomNickname();
+
+      const existingUser = await this.userRepository.findOne({
+        where: { nickname },
+      });
+      if (!existingUser) {
+        isUnique = true; // 중복되지 않으면 탈출
+      }
+    }
+
+    return nickname;
+  }
+
+  generateRandomNickname(): string {
+    const prefix = 'User';
+    const randomId = Math.random().toString(36).substr(2, 6); // 6자리 랜덤 문자열
+    return `${prefix}-${randomId}`;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['bookmarks', 'reviews'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userRepository.delete(user.id);
+  }
+
+  async revokeAppleToken(token: string) {
+    const clientId = process.env.APP_BUNDLE_ID;
+    const clientSecret = this.createClientSecret(); // Apple에서 요구하는 클라이언트 시크릿 생성
+
+    try {
+      const response = await axios.post(
+        'https://appleid.apple.com/auth/revoke',
+        null,
+        {
+          params: {
+            token,
+            client_id: clientId,
+            client_secret: clientSecret,
+            token_type_hint: 'refresh_token', // refresh_token을 해제
+          },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Apple 계정 해제 중 에러:', error);
+      throw new Error('Apple 계정 해제 실패');
+    }
+  }
+
+  async deleteUserAndRevokeApple(
+    userId: string,
+    appleToken: string,
+  ): Promise<void> {
+    // 1. 애플 계정 연동 해제
+    try {
+      await this.revokeAppleToken(appleToken);
+      console.log('Apple 계정 연동 해제 성공');
+    } catch (error) {
+      console.error('Apple 계정 연동 해제 실패:', error);
+      throw new Error('Apple 계정 연동 해제 중 문제가 발생했습니다.');
+    }
+
+    // 2. 사용자 데이터 삭제
+    try {
+      await this.deleteUser(userId);
+      console.log('사용자 데이터 삭제 성공');
+    } catch (error) {
+      console.error('사용자 데이터 삭제 실패:', error);
+      throw new Error('사용자 데이터를 삭제하는 중 문제가 발생했습니다.');
+    }
   }
 }

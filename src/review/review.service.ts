@@ -200,7 +200,7 @@ export class ReviewService {
         'review.photos',
         'review.createdAt',
         'user.id',
-        'user.name',
+        'user.nickname',
         'user.profileImage',
       ])
       .where('review.place.id = :placeId', { placeId: place.id })

@@ -14,10 +14,14 @@ export class BookmarkEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.bookmarks)
+  @ManyToOne(() => UserEntity, (user) => user.bookmarks, {
+    onDelete: 'CASCADE',
+  })
   user: UserEntity;
 
-  @ManyToOne(() => PlaceEntity, (place) => place.bookmarks)
+  @ManyToOne(() => PlaceEntity, (place) => place.bookmarks, {
+    onDelete: 'CASCADE',
+  })
   place: PlaceEntity;
 
   @Column({ default: false })
