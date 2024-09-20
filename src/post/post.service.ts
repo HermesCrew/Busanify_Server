@@ -19,7 +19,7 @@ export class PostService {
   ) {}
 
   async createPost(userId: string, postDto: PostDto): Promise<void> {
-    const { title, content, photos } = postDto;
+    const { content, photos } = postDto;
 
     if (!userId) {
       throw new BadRequestException('userId is required');
@@ -34,7 +34,6 @@ export class PostService {
     }
 
     let post = this.postRepository.create({
-      title,
       content,
       photos,
       user,
@@ -66,7 +65,6 @@ export class PostService {
       throw new NotFoundException('Post not found');
     }
 
-    post.title = title;
     post.content = content;
     post.photos = photos;
 
@@ -99,6 +97,19 @@ export class PostService {
     });
 
     return posts;
+  }
+
+  async getPost(postId: number): Promise<PostEntity> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: ['user', 'comments'],
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return post;
   }
 
   async getPostsByUser(userId: string): Promise<PostEntity[]> {

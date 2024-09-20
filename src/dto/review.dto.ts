@@ -16,7 +16,7 @@ export class ReviewDto {
 
 export class ReviewUpdateDto {
   @ApiProperty({ example: 'REVIEW_ID' })
-  id: string;
+  id: number;
 
   @ApiProperty({ example: 5 })
   rating: number;

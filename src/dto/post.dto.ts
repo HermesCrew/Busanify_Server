@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PostDto {
-  @ApiProperty({ example: '게시물 제목' })
-  title: string;
-
   @ApiProperty({ example: '게시물 내용' })
   content: string;
 
