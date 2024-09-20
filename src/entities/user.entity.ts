@@ -6,10 +6,10 @@ import {
   Entity,
   OneToMany,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { BookmarkEntity } from './bookmark.entity';
+import { CommentEntity } from './comment.entity';
 import { PostEntity } from './post.entity';
 import { ReviewEntity } from './review.entity';
 
@@ -51,4 +51,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => PostEntity, (post) => post.user)
   posts: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.user)
+  comments: CommentEntity[];
 }
