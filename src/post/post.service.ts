@@ -19,7 +19,7 @@ export class PostService {
   ) {}
 
   async createPost(userId: string, postDto: PostDto): Promise<void> {
-    const { content, photos } = postDto;
+    const { content, photoUrls } = postDto;
 
     if (!userId) {
       throw new BadRequestException('userId is required');
@@ -35,7 +35,7 @@ export class PostService {
 
     let post = this.postRepository.create({
       content,
-      photos,
+      photoUrls,
       user,
     });
 
@@ -45,9 +45,8 @@ export class PostService {
   async updatePost(
     userId: string,
     postId: number,
-    title: string,
     content: string,
-    photos: string[],
+    photoUrls: string[],
   ): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -66,7 +65,7 @@ export class PostService {
     }
 
     post.content = content;
-    post.photos = photos;
+    post.photoUrls = photoUrls;
 
     await this.postRepository.update(postId, post);
   }
@@ -94,6 +93,9 @@ export class PostService {
   async getPosts(): Promise<PostEntity[]> {
     const posts = await this.postRepository.find({
       relations: ['user'],
+      order: {
+        createdAt: 'DESC',
+      },
     });
 
     return posts;

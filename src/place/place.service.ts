@@ -159,7 +159,7 @@ export class PlaceService {
       'review.id AS reviewId',
       'review.rating AS reviewRating',
       'review.content AS reviewContent',
-      'review.photos AS reviewPhotos',
+      'review.photoUrls AS reviewPhotoUrls',
       'review.createdAt AS reviewCreatedAt',
       'user.id AS reviewUserId',
       'user.nickname AS reviewUserNickname',
@@ -208,7 +208,7 @@ export class PlaceService {
             id: r.reviewId,
             rating: r.reviewRating,
             content: r.reviewContent,
-            photos: r.reviewPhotos,
+            photoUrls: r.reviewPhotoUrls,
             user: {
               id: r.reviewUserId,
               nickname: r.reviewUserNickname,
@@ -222,7 +222,7 @@ export class PlaceService {
     delete transformedResult.reviewId;
     delete transformedResult.reviewRating;
     delete transformedResult.reviewContent;
-    delete transformedResult.reviewPhotos;
+    delete transformedResult.reviewPhotoUrls;
     delete transformedResult.reviewUserId;
     delete transformedResult.reviewUsername;
     delete transformedResult.reviewUserProfileImage;

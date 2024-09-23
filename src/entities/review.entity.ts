@@ -20,7 +20,7 @@ export class ReviewEntity {
   content: string;
 
   @Column({ type: 'json', nullable: true })
-  photos: string[];
+  photoUrls: string[];
 
   @CreateDateColumn()
   createdAt: Date;

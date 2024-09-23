@@ -5,5 +5,5 @@ export class PostDto {
   content: string;
 
   @ApiProperty({ example: ['imageURL_1, imageURL_2, imageURL_3'] })
-  photos: string[];
+  photoUrls: string[];
 }

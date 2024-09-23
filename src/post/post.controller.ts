@@ -46,11 +46,10 @@ export class PostController {
   async updatePost(
     @User() user,
     @Body('id') id: number,
-    @Body('title') title: string,
     @Body('content') content: string,
-    @Body('photos') photos: string[],
+    @Body('photoUrls') photoUrls: string[],
   ): Promise<void> {
-    await this.postService.updatePost(user.sub, id, title, content, photos);
+    await this.postService.updatePost(user.sub, id, content, photoUrls);
   }
 
   @UseGuards(SocialAuthGuard)

@@ -13,7 +13,7 @@ export class ReviewForUserDto {
 
   content: string;
 
-  photos: [string];
+  photoUrls: [string];
 
   createdAt: Date;
 

@@ -18,7 +18,7 @@ export class PostEntity {
   content: string;
 
   @Column({ type: 'json', nullable: true })
-  photos: string[];
+  photoUrls: string[];
 
   @CreateDateColumn()
   createdAt: Date;

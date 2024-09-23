@@ -11,7 +11,7 @@ export class ReviewDto {
   content: string;
 
   @ApiProperty({ example: ['imageURL_1, imageURL_2, imageURL_3'] })
-  photos: string[];
+  photoUrls: string[];
 }
 
 export class ReviewUpdateDto {
@@ -25,7 +25,7 @@ export class ReviewUpdateDto {
   content: string;
 
   @ApiProperty({ example: ['imageURL_1, imageURL_2, imageURL_3'] })
-  photos: string[];
+  photoUrls: string[];
 }
 
 export class ReviewDeleteDto {

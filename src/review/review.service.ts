@@ -23,7 +23,7 @@ export class ReviewService {
   ) {}
 
   async createReview(userId: string, reviewDto: ReviewDto): Promise<void> {
-    const { placeId, rating, content, photos } = reviewDto;
+    const { placeId, rating, content, photoUrls } = reviewDto;
 
     if (!userId) {
       throw new BadRequestException('userId is required');
@@ -52,7 +52,7 @@ export class ReviewService {
     let review = this.reviewRepository.create({
       rating,
       content,
-      photos,
+      photoUrls,
       user,
       place,
     });
@@ -77,7 +77,7 @@ export class ReviewService {
     reviewId: number,
     rating: number,
     content: string,
-    photos: string[],
+    photoUrls: string[],
   ): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -97,7 +97,7 @@ export class ReviewService {
 
     review.rating = rating;
     review.content = content;
-    review.photos = photos;
+    review.photoUrls = photoUrls;
 
     await this.reviewRepository.update(reviewId, review);
   }
@@ -137,7 +137,7 @@ export class ReviewService {
       'review.id AS id',
       'review.rating AS rating',
       'review.content AS content',
-      'review.photos AS photos',
+      'review.photoUrls AS photoUrls',
       'review.createdAt AS createdAt',
       'place.id AS placeId',
       'place.image AS placeImage',
@@ -165,7 +165,7 @@ export class ReviewService {
       id: result.id,
       rating: result.rating,
       content: result.content,
-      photos: result.photos,
+      photoUrls: result.photoUrls,
       createdAt: result.createdAt,
       place: {
         id: result.placeId,
@@ -197,7 +197,7 @@ export class ReviewService {
         'review.id',
         'review.rating',
         'review.content',
-        'review.photos',
+        'review.photoUrls',
         'review.createdAt',
         'user.id',
         'user.nickname',
