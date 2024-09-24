@@ -57,22 +57,22 @@ export class CommentService {
     await this.commentRepository.save(comment);
   }
 
-  //   async getCommentsByPost(postId: number): Promise<CommentEntity[]> {
-  //     const post = await this.postRepository.findOne({
-  //       where: { id: postId },
-  //     });
+  async getCommentsByPost(postId: number): Promise<CommentEntity[]> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+    });
 
-  //     if (!post) {
-  //       throw new NotFoundException('Post not found');
-  //     }
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
 
-  //     const comments = await this.commentRepository.find({
-  //       where: { post: post },
-  //       relations: ['post'],
-  //     });
+    const comments = await this.commentRepository.find({
+      where: { post: { id: postId } },
+      relations: ['user'],
+    });
 
-  //     return comments;
-  //   }
+    return comments;
+  }
 
   async deleteComment(userId, commentId): Promise<void> {
     if (!userId) {

@@ -90,13 +90,32 @@ export class PostService {
     await this.postRepository.delete(postId);
   }
 
-  async getPosts(): Promise<PostEntity[]> {
-    const posts = await this.postRepository.find({
-      relations: ['user'],
-      order: {
-        createdAt: 'DESC',
+  async getPosts() {
+    const rawPosts = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user') // 작성자 정보 포함
+      .leftJoin('post.comments', 'comments') // 댓글과 연결
+      .addSelect('COUNT(comments.id)', 'commentsCount') // 댓글 개수 선택
+      .groupBy('post.id') // 게시글 ID별로 그룹화
+      .addGroupBy('user.id') // 유저별 그룹화
+      .orderBy('post.createdAt', 'DESC') // 게시글 생성일 내림차순 정렬
+      .getRawMany(); // 원시 데이터로 가져옴
+
+    // commentsCount를 포함한 posts 형식으로 변환
+    const posts = rawPosts.map((post) => ({
+      id: post.post_id,
+      content: post.post_content,
+      photoUrls: post.post_photoUrls, // 이 필드는 배열로 매핑 필요할 수 있음
+      createdAt: post.post_createdAt,
+      commentsCount: Number(post.commentsCount), // commentsCount를 Number로 변환
+      user: {
+        id: post.user_id,
+        email: post.user_email,
+        nickname: post.user_nickname,
+        profileImage: post.user_profileImage,
+        provider: post.user_provider,
       },
-    });
+    }));
 
     return posts;
   }

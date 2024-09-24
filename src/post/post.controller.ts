@@ -34,7 +34,7 @@ export class PostController {
   @ApiOperation({
     summary: '게시글 모두 불러오기',
   })
-  async getPosts(): Promise<PostEntity[]> {
+  async getPosts() {
     return await this.postService.getPosts();
   }
 

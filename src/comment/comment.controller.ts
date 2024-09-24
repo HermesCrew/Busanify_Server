@@ -1,9 +1,18 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
 import { userInfo } from 'os';
 import { SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CommentDto } from 'src/dto/comment.dto';
+import { CommentEntity } from 'src/entities/comment.entity';
 import { CommentService } from './comment.service';
 
 @Controller('comments')
@@ -21,6 +30,14 @@ export class CommentController {
     @Body() commentDto: CommentDto,
   ): Promise<void> {
     await this.commentService.createComment(user.sub, commentDto);
+  }
+
+  @Get('post/:id')
+  @ApiOperation({
+    summary: '게시글의 댓글 불러오기',
+  })
+  async getComments(@Param('id') postId: number): Promise<CommentEntity[]> {
+    return await this.commentService.getCommentsByPost(postId);
   }
 
   @UseGuards(SocialAuthGuard)
