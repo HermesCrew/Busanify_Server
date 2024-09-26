@@ -66,7 +66,7 @@ export class PostController {
   @ApiOperation({
     summary: '사용자 게시글 조회',
   })
-  async getPostsByUserr(@User() user): Promise<PostEntity[]> {
+  async getPostsByUser(@User() user) {
     return await this.postService.getPostsByUser(user.sub);
   }
 }

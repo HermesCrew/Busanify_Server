@@ -297,8 +297,19 @@ export class PlaceService {
         { userId: userId },
       );
     }
+
+    const titleFieldMap: { [key: string]: string } = {
+      eng: 'place.titleEng',
+      jpn: 'place.titleJpn',
+      chs: 'place.titleChs',
+      cht: 'place.titleCht',
+    };
+
+    // 해당하는 lang 값으로 where 절 설정
+    const titleField = titleFieldMap[lang] || 'place.titleEng';
+
     const results = await queryBuilder
-      .where('place.titleEng LIKE :title', { title: `%${title}%` })
+      .where(`${titleField} LIKE :title`, { title: `%${title}%` })
       .getRawMany();
 
     return results.map((result) => ({

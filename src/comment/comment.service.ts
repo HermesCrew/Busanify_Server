@@ -88,7 +88,7 @@ export class CommentService {
     }
 
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, user: { id: userId } },
+      where: { id: commentId },
     });
 
     if (!comment) {
