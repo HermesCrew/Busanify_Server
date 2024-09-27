@@ -140,23 +140,48 @@ export class ReviewService {
       'review.photoUrls AS photoUrls',
       'review.createdAt AS createdAt',
       'place.id AS placeId',
+      'place.typeId AS typeId',
       'place.image AS placeImage',
+      'place.lat AS lat',
+      'place.lng AS lng',
+      'place.tel AS tel',
+      `COALESCE(AVG(review.rating), 0) AS avgRating`,
+      'user.id AS userId',
+      'user.email AS userEmail',
+      'user.nickname AS userNickname',
+      'user.profileImage AS userProfileImage',
     ];
 
     const langColumns: { [key: string]: string[] } = {
-      eng: ['place.titleEng AS placeTitle'],
-      jpn: ['place.titleJpn AS placeTitle'],
-      chs: ['place.titleChs AS placeTitle'],
-      cht: ['place.titleCht AS placeTitle'],
+      eng: ['place.titleEng AS title', 'place.addressEng AS address'],
+      jpn: ['place.titleJpn AS title', 'place.addressJpn AS address'],
+      chs: ['place.titleChs AS title', 'place.addressChs AS address'],
+      cht: ['place.titleCht AS title', 'place.addressCht AS address'],
     };
 
     if (langColumns[lang]) {
       selectedColumns = [...selectedColumns, ...langColumns[lang]];
     }
 
+    if (userId) {
+      selectedColumns.push('MAX(bookmark.id IS NOT NULL) AS isBookmarked');
+    } else {
+      selectedColumns.push(`false AS isBookmarked`);
+    }
+
     const results = await this.reviewRepository
       .createQueryBuilder('review')
       .leftJoin('review.place', 'place')
+      .leftJoin('review.user', 'user')
+      .leftJoin(
+        'bookmark',
+        'bookmark',
+        'bookmark.placeId = place.id AND bookmark.userId = :userId',
+        { userId },
+      ) // bookmark 조인 추가
+      .groupBy('review.id')
+      .addGroupBy('place.id')
+      .addGroupBy('user.id')
       .where('review.user.id = :userId', { userId: user.id })
       .select(selectedColumns)
       .getRawMany();
@@ -167,10 +192,23 @@ export class ReviewService {
       content: result.content,
       photoUrls: result.photoUrls,
       createdAt: result.createdAt,
+      user: {
+        id: result.userId,
+        email: result.userEmail,
+        nickname: result.userNickname,
+        profileImage: result.userProfileImage,
+      },
       place: {
         id: result.placeId,
+        typeId: result.typeId,
         image: result.placeImage,
+        lat: result.lat,
+        lng: result.lng,
+        tel: result.tel,
         title: result.placeTitle,
+        address: result.address,
+        isBookmarked: result.isBookmarked,
+        avgRating: result.avgRating,
       },
     }));
 

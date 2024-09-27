@@ -58,14 +58,14 @@ export class ReviewController {
     @Body('id') id: number,
     @Body('rating') rating: number,
     @Body('content') content: string,
-    @Body('photos') photos: string[],
+    @Body('photoUrls') photoUrls: string[],
   ): Promise<void> {
     await this.reviewService.updateReview(
       user.sub,
       id,
       rating,
       content,
-      photos,
+      photoUrls,
     );
   }
 

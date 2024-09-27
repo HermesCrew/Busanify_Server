@@ -128,7 +128,9 @@ export class AuthService {
 
   generateAccessToken(userId: string): string {
     const payload = { sub: userId };
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign(payload, {
+      expiresIn: process.env.ACCESS_EXPIRATION_TIME,
+    });
   }
 
   generateRefreshToken(): string {
