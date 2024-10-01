@@ -310,6 +310,7 @@ export class PlaceService {
 
     const results = await queryBuilder
       .where(`${titleField} LIKE :title`, { title: `%${title}%` })
+      .limit(20)
       .getRawMany();
 
     return results.map((result) => ({

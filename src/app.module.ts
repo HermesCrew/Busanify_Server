@@ -9,6 +9,7 @@ import { ReviewModule } from './review/review.module';
 import { ReportModule } from './report/report.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
+import { BlockedUserModule } from './blocked-user/blocked-user.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CommentModule } from './comment/comment.module';
     ReportModule,
     PostModule,
     CommentModule,
+    BlockedUserModule,
   ],
 })
 export class AppModule {}

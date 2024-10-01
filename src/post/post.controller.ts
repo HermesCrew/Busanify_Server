@@ -30,12 +30,13 @@ export class PostController {
     await this.postService.createPost(user.sub, postDto);
   }
 
+  @UseGuards(SocialAuthGuard)
   @Get()
   @ApiOperation({
     summary: '게시글 모두 불러오기',
   })
-  async getPosts() {
-    return await this.postService.getPosts();
+  async getPosts(@User() user) {
+    return await this.postService.getPosts(user.sub);
   }
 
   @UseGuards(SocialAuthGuard)

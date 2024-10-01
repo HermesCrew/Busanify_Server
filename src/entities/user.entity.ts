@@ -12,6 +12,7 @@ import { BookmarkEntity } from './bookmark.entity';
 import { CommentEntity } from './comment.entity';
 import { PostEntity } from './post.entity';
 import { ReviewEntity } from './review.entity';
+import { BlockedUserEntity } from './blocked-user.entity';
 
 @Entity('user')
 export class UserEntity extends BaseEntity {

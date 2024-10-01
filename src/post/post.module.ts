@@ -5,9 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { PostEntity } from 'src/entities/post.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { BlockedUserEntity } from 'src/entities/blocked-user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostEntity, UserEntity]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([PostEntity, UserEntity, BlockedUserEntity]),
+    AuthModule,
+  ],
   controllers: [PostController],
   providers: [PostService],
 })

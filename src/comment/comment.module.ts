@@ -6,10 +6,16 @@ import { UserEntity } from 'src/entities/user.entity';
 import { CommentEntity } from 'src/entities/comment.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { PostEntity } from 'src/entities/post.entity';
+import { BlockedUserEntity } from 'src/entities/blocked-user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CommentEntity, UserEntity, PostEntity]),
+    TypeOrmModule.forFeature([
+      CommentEntity,
+      UserEntity,
+      PostEntity,
+      BlockedUserEntity,
+    ]),
     AuthModule,
   ],
   controllers: [CommentController],

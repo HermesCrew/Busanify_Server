@@ -32,12 +32,16 @@ export class CommentController {
     await this.commentService.createComment(user.sub, commentDto);
   }
 
+  @UseGuards(SocialAuthGuard)
   @Get('post/:id')
   @ApiOperation({
     summary: '게시글의 댓글 불러오기',
   })
-  async getComments(@Param('id') postId: number): Promise<CommentEntity[]> {
-    return await this.commentService.getCommentsByPost(postId);
+  async getComments(
+    @User() user,
+    @Param('id') postId: number,
+  ): Promise<CommentEntity[]> {
+    return await this.commentService.getCommentsByPost(postId, user.sub);
   }
 
   @UseGuards(SocialAuthGuard)

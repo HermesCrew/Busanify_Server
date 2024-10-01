@@ -205,10 +205,10 @@ export class ReviewService {
         lat: result.lat,
         lng: result.lng,
         tel: result.tel,
-        title: result.placeTitle,
+        title: result.title,
         address: result.address,
-        isBookmarked: result.isBookmarked,
-        avgRating: result.avgRating,
+        isBookmarked: Boolean(Number(result.isBookmarked)),
+        avgRating: parseFloat(parseFloat(result.avgRating).toFixed(2)),
       },
     }));
 
