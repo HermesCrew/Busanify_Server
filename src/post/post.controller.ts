@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { userInfo } from 'os';
-import { SocialAuthGuard } from 'src/auth/social-auth.guard';
+import { OptionalAuthGuard, SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { PostDto } from 'src/dto/post.dto';
 import { PostEntity } from 'src/entities/post.entity';
@@ -30,13 +30,14 @@ export class PostController {
     await this.postService.createPost(user.sub, postDto);
   }
 
-  @UseGuards(SocialAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get()
   @ApiOperation({
     summary: '게시글 모두 불러오기',
   })
   async getPosts(@User() user) {
-    return await this.postService.getPosts(user.sub);
+    const userId = user ? user.sub : null;
+    return await this.postService.getPosts(userId);
   }
 
   @UseGuards(SocialAuthGuard)

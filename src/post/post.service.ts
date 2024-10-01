@@ -93,15 +93,20 @@ export class PostService {
     await this.postRepository.delete(postId);
   }
 
-  async getPosts(userId: string) {
-    const blockedUsers = await this.blockedUserRepository
-      .createQueryBuilder('blocked_user')
-      .select('blocked_user.blockedUserId')
-      .where('blocked_user.userId = :userId', { userId })
-      .getMany();
+  async getPosts(userId?: string) {
+    let blockedUserIds: string[] = [];
 
-    // 차단된 유저들의 ID 배열 생성
-    const blockedUserIds = blockedUsers.map((blocked) => blocked.blockedUserId);
+    // userId가 있을 경우에만 차단된 유저를 조회
+    if (userId) {
+      const blockedUsers = await this.blockedUserRepository
+        .createQueryBuilder('blocked_user')
+        .select('blocked_user.blockedUserId')
+        .where('blocked_user.userId = :userId', { userId })
+        .getMany();
+
+      // 차단된 유저들의 ID 배열 생성
+      blockedUserIds = blockedUsers.map((blocked) => blocked.blockedUserId);
+    }
 
     // QueryBuilder 시작
     const queryBuilder = this.postRepository
@@ -138,6 +143,7 @@ export class PostService {
       },
     }));
 
+    console.log(posts);
     return posts;
   }
 

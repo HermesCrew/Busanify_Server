@@ -62,7 +62,7 @@ export class CommentService {
 
   async getCommentsByPost(
     postId: number,
-    userId: string,
+    userId?: string,
   ): Promise<CommentEntity[]> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
@@ -72,20 +72,19 @@ export class CommentService {
       throw new NotFoundException('Post not found');
     }
 
-    // const comments = await this.commentRepository.find({
-    //   where: { post: { id: postId } },
-    //   relations: ['user'],
-    // });
+    let blockedUserIds: string[] = [];
 
-    // 현재 유저가 차단한 유저 목록을 조회
-    const blockedUsers = await this.blockedUserRepository
-      .createQueryBuilder('blocked_user')
-      .select('blocked_user.blockedUserId')
-      .where('blocked_user.userId = :userId', { userId })
-      .getMany();
+    // userId가 있을 경우에만 차단한 유저 목록을 조회
+    if (userId) {
+      const blockedUsers = await this.blockedUserRepository
+        .createQueryBuilder('blocked_user')
+        .select('blocked_user.blockedUserId')
+        .where('blocked_user.userId = :userId', { userId })
+        .getMany();
 
-    // 차단된 유저들의 ID 배열 생성
-    const blockedUserIds = blockedUsers.map((blocked) => blocked.blockedUserId);
+      // 차단된 유저들의 ID 배열 생성
+      blockedUserIds = blockedUsers.map((blocked) => blocked.blockedUserId);
+    }
 
     // 댓글 조회 시 차단된 유저의 댓글은 제외
     const queryBuilder = this.commentRepository

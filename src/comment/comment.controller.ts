@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOperation } from '@nestjs/swagger';
 import { userInfo } from 'os';
-import { SocialAuthGuard } from 'src/auth/social-auth.guard';
+import { OptionalAuthGuard, SocialAuthGuard } from 'src/auth/social-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CommentDto } from 'src/dto/comment.dto';
 import { CommentEntity } from 'src/entities/comment.entity';
@@ -32,7 +32,7 @@ export class CommentController {
     await this.commentService.createComment(user.sub, commentDto);
   }
 
-  @UseGuards(SocialAuthGuard)
+  @UseGuards(OptionalAuthGuard)
   @Get('post/:id')
   @ApiOperation({
     summary: '게시글의 댓글 불러오기',
@@ -41,7 +41,8 @@ export class CommentController {
     @User() user,
     @Param('id') postId: number,
   ): Promise<CommentEntity[]> {
-    return await this.commentService.getCommentsByPost(postId, user.sub);
+    const userId = user ? user.sub : null;
+    return await this.commentService.getCommentsByPost(postId, userId);
   }
 
   @UseGuards(SocialAuthGuard)
